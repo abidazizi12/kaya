@@ -1,0 +1,157 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - POPUP DETAIL AKUN (ketuk kartu depan di tab Dompet)
+     * Isi: saldo, nomor rekening + tombol salin, (E-Money) tombol sinkron eChis,
+     * dan transaksi 30 hari terakhir.
+     * Wajib di-include SETELAH JS_Emoney di Index.html.
+     * Backend: updateAccountInfo di Code.gs. Tidak mengubah perhitungan saldo.
+     * Nomor rekening dan nama pemilik diisi pengguna lewat tombol "Ubah" di popup ini
+     * (disimpan di kolom E-F sheet "Akun"), tidak ada yang tertulis di kode.
+     * ============================================================
+     */
+
+    // Ketuk kartu DEPAN = buka popup. Ketuk kartu yang mengintip / geser = perilaku lama.
+    (function () {
+      const asetUpAsli = asetUp;
+      asetUp = function (e) {
+        const d = _asetDrag;
+        if (d && !d.moved && d.i >= 0 && d.i === (window._asetFront || 0)) {
+          _asetDrag = null;
+          openAkunDetail(d.i);
+          return;
+        }
+        asetUpAsli(e);
+      };
+    })();
+
+    function rekAkun() {
+      return window._rek ? state.accounts.find(x => x.name === window._rek.name) : null;
+    }
+
+    // Format salin: "No Rekening <akun>" / nomor / "A/n <nama>" (baris A/n dilewati kalau nama belum diisi)
+    function rekTeks(a) {
+      const an = String(a.atasNama || '').trim();
+      return 'No Rekening ' + a.name + '\n' + a.noRek + (an ? '\nA/n ' + an : '');
+    }
+
+    function rekSalin() {
+      const a = rekAkun();
+      if (!a || !a.noRek) return;
+      const t = rekTeks(a);
+      const ok = () => showToast('Nomor rekening tersalin');
+      const fb = () => {
+        const ta = document.createElement('textarea');
+        ta.value = t;
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select(); ta.setSelectionRange(0, t.length);
+        try { document.execCommand('copy') ? ok() : showToast('Gagal menyalin'); } catch (x) { showToast('Gagal menyalin'); }
+        document.body.removeChild(ta);
+      };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(ok).catch(fb);
+      else fb();
+    }
+
+    function openAkunDetail(i) {
+      const a = temaKartuList()[i];
+      if (!a) return;
+      window._rek = { name: a.name, idx: i, edit: false };
+      renderAkunDetail();
+    }
+
+    function rekEdit(on) {
+      window._rek.edit = !!on;
+      renderAkunDetail();
+    }
+
+    // Optimistic UI: ubah state -> render -> simpan ke server -> sinkron ulang
+    function rekSimpan() {
+      const a = rekAkun();
+      if (!a) return;
+      const no = document.getElementById('rek-no').value.trim();
+      const an = document.getElementById('rek-an').value.trim();
+      a.noRek = no;
+      a.atasNama = an;
+      window._rek.edit = false;
+      renderAkunDetail();
+      showToast('Tersimpan!');
+      google.script.run
+        .withSuccessHandler(r => { if (!r || !r.success) showToast((r && r.error) || 'Gagal menyimpan'); loadData(); })
+        .withFailureHandler(onError)
+        .updateAccountInfo(a.name, no, an);
+    }
+
+    // Dari popup kartu E-Money: buka sinkron eChis untuk akun ini
+    function rekSinkron() {
+      const nama = window._rek && window._rek.name;
+      closeModal();
+      setTimeout(() => {
+        openEmoney();
+        if (nama && window._em && emAkunList().some(a => a.name === nama)) {
+          window._em.akun = nama;
+          renderEmoneyAwal();
+        }
+      }, 300);
+    }
+
+    function renderAkunDetail() {
+      const a = rekAkun();
+      if (!a) return;
+      const idx = window._rek.idx || 0;
+
+      // Transaksi 30 hari terakhir untuk akun ini
+      const batas = new Date();
+      batas.setDate(batas.getDate() - 30);
+      const cutoff = getLocalDateString(batas);
+      const txs = state.transactions
+        .filter(t => t.account === a.name && String(t.date) >= cutoff)
+        .sort((x, y) => x.date < y.date ? 1 : -1);
+      const tampil = txs.slice(0, 40);
+
+      const rek = window._rek.edit
+        ? `<label class="field-label" for="rek-no" style="margin-top:0">Nomor rekening</label>
+           <input id="rek-no" class="field-input" inputmode="numeric" placeholder="Nomor rekening / nomor akun" value="${escapeHtml(a.noRek || '')}">
+           <label class="field-label" for="rek-an">Atas nama</label>
+           <input id="rek-an" class="field-input" placeholder="Nama pemilik rekening" value="${escapeHtml(a.atasNama || '')}">
+           <div style="display:flex;gap:10px;margin-top:16px">
+             <button onclick="rekEdit(false)" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:14px 0;color:var(--text);font-size:15px;font-weight:700;cursor:pointer">Batal</button>
+             <button onclick="rekSimpan()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:14px 0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Simpan</button>
+           </div>`
+        : (a.noRek
+          ? `<div style="font-size:12px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">NO REKENING ${escapeHtml(a.name).toUpperCase()}</div>
+             <div class="tabular" style="font-size:22px;font-weight:800;color:var(--text);margin-top:4px;word-break:break-all">${escapeHtml(a.noRek)}</div>
+             <div style="font-size:14px;color:var(--text-muted);font-weight:600;margin-top:2px">${a.atasNama ? 'A/n ' + escapeHtml(a.atasNama) : 'Atas nama belum diisi'}</div>
+             <div style="display:flex;gap:10px;margin-top:14px">
+               <button onclick="rekSalin()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:13px 0;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="copy" style="width:18px;height:18px"></i> Salin</button>
+               <button onclick="rekEdit(true)" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:13px 0;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="pencil" style="width:16px;height:16px"></i> Ubah</button>
+             </div>`
+          : `<div style="font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.5">Nomor rekening belum diisi.</div>
+             <button onclick="rekEdit(true)" style="width:100%;margin-top:12px;background:var(--violet-soft);border:none;border-radius:9999px;padding:13px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="plus" style="width:16px;height:16px"></i> Isi nomor rekening</button>`);
+
+      const daftar = tampil.length === 0
+        ? '<div style="text-align:center;color:var(--text-muted);font-size:14px;padding:22px 0;font-weight:500">Tidak ada transaksi dalam 30 hari terakhir.</div>'
+        : tampil.map((t, i) => `<div style="${i > 0 ? 'border-top:1px dashed var(--border);' : ''}">
+              <div style="font-size:11.5px;color:var(--text-muted);font-weight:700;padding-top:8px">${fmtDateLabel(t.date)}</div>${txRow(t, true)}</div>`).join('');
+
+      // Tombol sinkron eChis: hanya untuk akun bertipe E-money
+      const sinkron = a.type === 'E-money'
+        ? `<button onclick="rekSinkron()" style="width:100%;margin-bottom:16px;background:var(--violet-soft);border:none;border-radius:9999px;padding:14px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="file-spreadsheet" style="width:18px;height:18px"></i> Sinkron saldo E-Money (file eChis)</button>`
+        : '';
+
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">${accIcon(a.name, idx, a.type, 40)}<span class="display" style="font-weight:800;font-size:22px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span></div>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+        </div>
+        <div class="card" style="padding:16px 18px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">SALDO</div>
+          <div class="display tabular" style="font-size:28px;font-weight:800;color:var(--text);margin-top:2px">${fmtHide(accountBalance(a.name))}</div>
+        </div>
+        <div class="card" style="padding:16px 18px;margin-bottom:16px">${rek}</div>
+        ${sinkron}
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">Transaksi 30 hari terakhir${txs.length > tampil.length ? ' (40 terbaru)' : ''}</div>
+        <div class="card" style="padding:4px 16px;max-height:340px;overflow-y:auto">${daftar}</div>
+      `);
+    }
+</script>
