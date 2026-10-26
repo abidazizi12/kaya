@@ -1,6 +1,6 @@
 # KAYA — Financial Tracker
 
-Pencatat keuangan pribadi berbasis **Google Sheets + Google Apps Script**. Datamu tersimpan di Google Sheets milikmu sendiri, tanpa server pihak ketiga. Tampilan mobile-first (bisa dipasang sebagai PWA), bahasa Indonesia.
+Pencatat keuangan pribadi berbasis **Google Sheets + Google Apps Script**. Datamu tersimpan di Google Sheets milikmu sendiri, tanpa server pihak ketiga. Tampilan mobile-first (dipasang sebagai PWA lewat Cloudflare Worker), bahasa Indonesia.
 
 > Versi: **v1.0.0 (Public Release)** · by Abidzi
 
@@ -15,7 +15,7 @@ Pencatat keuangan pribadi berbasis **Google Sheets + Google Apps Script**. Datam
 - Sinkron saldo E-Money dari file eChis
 - Import transaksi dari file/gambar (OCR)
 
-## Cara pasang (±10 menit)
+## Cara pasang (±15 menit)
 
 1. Buat Google Sheet baru, lalu buka **Extensions → Apps Script**.
 2. Salin semua file `.js` ke project sebagai file Script (`Code`, `Database`, `Emoney`, `Titip`) dan semua file `.html` sebagai file HTML (`Index`, `JS_Core`, `JS_Logo`, dst). **Nama file harus sama persis** (tanpa ekstensi), karena `Index.html` memanggilnya lewat `include_('JS_Core')` dan seterusnya.
@@ -24,19 +24,22 @@ Pencatat keuangan pribadi berbasis **Google Sheets + Google Apps Script**. Datam
 5. Di editor Apps Script: **Deploy → New deployment → Web app**
    - Execute as: **Me**
    - Who has access: **Anyone** (wajib agar webhook iPhone Shortcuts bisa masuk)
-6. Buka URL `/exec` hasil deploy. Itu aplikasimu. Di iPhone: Share → *Add to Home Screen*.
+6. Salin URL `/exec` hasil deploy. **Jangan dipakai langsung sebagai aplikasi**, lanjut ke langkah 7.
+7. **Pasang Cloudflare Worker (wajib).** Tampilan KAYA dirancang untuk diperkecil lewat `UI_SCALE` di `worker.js`. Kalau URL `/exec` dibuka langsung, UI akan terlihat terlalu besar.
+   - Cloudflare Dashboard → **Workers & Pages → Create → Hello World** → beri nama (mis. `kaya`) → **Deploy**.
+   - Klik **Edit code**, ganti seluruh isinya dengan `worker.js` dari repo ini.
+   - Di baris pertama, isi `GAS_URL` dengan URL `/exec` dari langkah 6, lalu **Deploy**.
+   - Buka `https://<nama-worker>.<akun>.workers.dev/`. Itu aplikasimu. Di iPhone: Share → *Add to Home Screen*.
 
-Setelah mengubah kode, deploy ulang lewat **Manage deployments → Edit → New version** agar URL tidak berubah.
+Setelah mengubah kode Apps Script, deploy ulang lewat **Manage deployments → Edit → New version** agar URL `/exec` tidak berubah (jadi `GAS_URL` tidak perlu diganti). Setelah mengubah `worker.js`, deploy ulang Worker.
 
-### Opsional: bungkus dengan Cloudflare Worker (PWA, nama dan ikon sendiri)
-
-Isi `GAS_URL` di `worker.js` dengan URL `/exec` milikmu, lalu deploy ke Cloudflare Workers. Worker hanya menampilkan aplikasi di dalam iframe dan menyediakan manifest + ikon. Tidak ada logika bisnis atau rahasia di Worker. Atur `UI_SCALE` kalau tampilan terasa terlalu besar atau kecil.
+Worker menampilkan aplikasi di dalam iframe, menyediakan manifest PWA dan ikon, serta menerapkan skala tampilan. Tidak ada logika bisnis atau rahasia di Worker. Kalau tampilan terasa terlalu besar atau kecil, ubah `UI_SCALE` (bawaan `0.85`).
 
 ### Opsional: pencatatan otomatis dari notifikasi (iPhone Shortcuts)
 
 Buat Automation tipe *Notification* per aplikasi, lalu aksi *Get Contents of URL*:
 
-- URL: URL `/exec` aplikasimu
+- URL: URL `/exec` Apps Script-mu (bukan URL workers.dev)
 - Method: `POST`, Request Body: **JSON**
 
 ```json
@@ -53,7 +56,7 @@ Buat Automation tipe *Notification* per aplikasi, lalu aksi *Get Contents of URL
 
 ## Keamanan — baca ini
 
-- Web app harus berakses **Anyone** agar webhook bisa masuk. Artinya **siapa pun yang tahu URL `/exec`-mu bisa membuka aplikasi dan melihat datamu**. Jangan bagikan URL itu, jangan unggah ke tempat publik, dan jangan masukkan ke screenshot yang disebar.
+- Web app harus berakses **Anyone** agar webhook bisa masuk. Artinya **siapa pun yang tahu URL `/exec` atau URL workers.dev-mu bisa membuka aplikasi dan melihat datamu**. Jangan bagikan URL itu, jangan unggah ke tempat publik, dan jangan masukkan ke screenshot yang disebar.
 - Token webhook disimpan di **Script Properties**, bukan di kode. Jangan bagikan token. Kalau bocor: menu **KAYA → Buat Ulang Token Webhook**, lalu perbarui semua Shortcuts.
 - Jangan pernah commit `.clasp.json`, spreadsheet, atau ekspor data keuanganmu ke repo.
 - Setiap pengguna memakai Google Sheet, deployment, dan token **miliknya sendiri**. Tidak ada data yang dikirim ke pengembang.
@@ -71,7 +74,7 @@ Secara bawaan semua akun memakai ikon Lucide. Untuk memakai logo bank/e-wallet m
 | `Emoney.js` | Sinkron saldo E-Money dari file eChis |
 | `Titip.js` | Split bill dan titipan |
 | `Index.html` + `JS_*.html` | Frontend (HTML, CSS, JavaScript murni) |
-| `worker.js` | Cloudflare Worker (opsional) |
+| `worker.js` | Cloudflare Worker: iframe, skala UI, manifest PWA + ikon (wajib) |
 | `appsscript.json` | Manifest Apps Script |
 
 ## Catatan teknis
