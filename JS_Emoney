@@ -1,0 +1,194 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - SINKRON SALDO E-MONEY DARI FILE eChis (frontend)
+     * Tombol muncul di tab Dompet (di bawah tumpukan kartu) kalau ada akun bertipe E-money.
+     * Wajib di-include SETELAH JS_Titip di Index.html. Backend: Emoney.gs
+     * Tidak mengubah perhitungan saldo: hanya menambah baris di Transaksi lewat emoneyTerapkan.
+     * ============================================================
+     */
+    function emAkunList() { return state.accounts.filter(a => a.type === 'E-money'); }
+
+    function openEmoney() {
+      const l = emAkunList();
+      if (!l.length) { showToast('Belum ada akun E-money'); return; }
+      window._em = { akun: l[0].name, data: null, pilih: {}, kategori: '', balancing: false, busy: false };
+      renderEmoneyAwal();
+    }
+
+    function emPilihAkun(i) {
+      const a = emAkunList()[i];
+      if (a) { window._em.akun = a.name; renderEmoneyAwal(); }
+    }
+
+    function renderEmoneyAwal(pesan) {
+      const em = window._em;
+      const l = emAkunList();
+      const chips = l.length > 1
+        ? `<label class="field-label">Akun E-money</label><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">${l.map((a, i) => `<button class="chip ${em.akun === a.name ? 'active' : ''}" onclick="emPilihAkun(${i})">${escapeHtml(a.name)}</button>`).join('')}</div>`
+        : '';
+      const isi = em.busy
+        ? `<div class="card" style="padding:28px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:600"><i data-lucide="loader-2" class="lucide-spin" style="width:22px;height:22px;display:block;margin:0 auto 10px"></i>Membaca file…</div>`
+        : `<input type="file" id="em-file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="emoneyPilihFile(this)">
+           <button class="btn-primary" onclick="document.getElementById('em-file').click()" style="margin-top:8px"><i data-lucide="upload" style="width:20px;height:20px"></i> Pilih file eChis (.xlsx)</button>`;
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Sinkron E-Money</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+        </div>
+        <div style="font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.5;margin-bottom:6px">Pilih file Excel hasil ekspor aplikasi eChis. KAYA mencari transaksi kartu yang belum tercatat, lalu kamu bisa mencentangnya sebelum disimpan.</div>
+        ${chips}
+        ${isi}
+        <div id="em-error" class="err">${escapeHtml(pesan || '')}</div>
+      `);
+    }
+
+    function emoneyPilihFile(input) {
+      if (!input.files || !input.files.length) return;
+      const file = input.files[0];
+      const em = window._em;
+      em.busy = true;
+      renderEmoneyAwal();
+      const reader = new FileReader();
+      reader.onerror = function () { em.busy = false; renderEmoneyAwal('File tidak bisa dibaca'); };
+      reader.onload = function (e) {
+        const b64 = String(e.target.result).split(',')[1];
+        google.script.run
+          .withSuccessHandler(res => {
+            em.busy = false;
+            if (!res || !res.success) { renderEmoneyAwal((res && res.error) || 'Gagal membaca file'); return; }
+            emTerimaData(res);
+          })
+          .withFailureHandler(err => { em.busy = false; renderEmoneyAwal('Gagal membaca file: ' + ((err && err.message) || err)); })
+          .emoneyBacaFile(b64, file.type, file.name, em.akun);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function emTerimaData(res) {
+      const em = window._em;
+      em.data = res;
+      em.pilih = {};
+      res.rows.forEach(r => { em.pilih[r.no] = !!r.pilih; });
+      const kats = emKategoriList();
+      em.kategori = kats.includes('Transportasi') ? 'Transportasi' : (kats[0] || 'Lainnya');
+      em.balancing = false;
+      renderEmoneyHasil();
+    }
+
+    function emKategoriList() {
+      return state.categories
+        .filter(c => c.group !== 'PENGHASILAN' && !['Transfer Antar Rekening', 'Pembayaran CC', 'Hutang Piutang'].includes(c.name))
+        .map(c => c.name);
+    }
+
+    function emHitung() {
+      const em = window._em, d = em.data;
+      let masuk = 0, keluar = 0, n = 0;
+      d.rows.forEach(r => {
+        if (!em.pilih[r.no]) return;
+        n++;
+        if (r.dir === 'Masuk') masuk += r.amount; else keluar += r.amount;
+      });
+      const setelah = d.saldoKaya + masuk - keluar;
+      return { n: n, setelah: setelah, sisa: d.saldoKartu - setelah };
+    }
+
+    function renderEmoneyHasil() {
+      const em = window._em, d = em.data;
+      const opts = emKategoriList().map(n => `<option value="${escapeHtml(n)}" ${n === em.kategori ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
+
+      const info = d.anchorNo
+        ? `Saldo E-Money di KAYA sama dengan saldo kartu setelah transaksi No ${d.anchorNo}. Transaksi sesudahnya dicentang otomatis.`
+        : 'Saldo KAYA tidak cocok dengan saldo setelah transaksi mana pun di riwayat kartu. Pilihan otomatis memakai tanggal; periksa lagi sebelum menyimpan.';
+
+      const baris = d.rows.map(r => {
+        const masuk = r.dir === 'Masuk';
+        return `<label style="display:flex;align-items:center;gap:12px;padding:12px 2px;border-top:1px solid var(--border);cursor:pointer">
+          <input type="checkbox" ${em.pilih[r.no] ? 'checked' : ''} onchange="emToggle(${r.no}, this.checked)" style="width:22px;height:22px;flex-shrink:0;accent-color:var(--primary)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--text)">${fmtDateLabel(r.date)} · ${escapeHtml(r.time)}</div>
+            <div style="font-size:12.5px;color:var(--text-muted);font-weight:500">${masuk ? 'Top-up' : 'Pembayaran'} · MID ${escapeHtml(r.mid)} · saldo kartu ${fmtRp(r.balance)}</div>
+            ${r.mirip ? '<div style="font-size:12px;color:#B06000;font-weight:700;margin-top:2px">Mirip transaksi yang sudah ada di KAYA</div>' : ''}
+            ${masuk ? '<div style="font-size:12px;color:#B06000;font-weight:700;margin-top:2px">Top-up: lebih tepat dicatat lewat Transfer dari akun asalnya</div>' : ''}
+          </div>
+          <div class="tabular" style="font-size:15px;font-weight:800;color:${masuk ? 'var(--emerald)' : 'var(--text)'};flex-shrink:0">${masuk ? '+' : '-'}${fmtRp(r.amount)}</div>
+        </label>`;
+      }).join('');
+
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Sinkron E-Money</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+        </div>
+        <div class="card" style="padding:14px 16px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Saldo di kartu</span><span class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtRp(d.saldoKartu)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Saldo ${escapeHtml(d.akun)} di KAYA</span><span class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtRp(d.saldoKaya)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px dashed var(--border)"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Setelah disimpan</span><span id="em-setelah" class="tabular" style="font-size:14px;font-weight:800;color:var(--text)"></span></div>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);font-weight:500;line-height:1.45;margin-bottom:10px">${escapeHtml(info)}</div>
+        <label class="field-label" for="em-kat" style="margin-top:6px">Kategori pembayaran</label>
+        <select id="em-kat" class="field-input" onchange="window._em.kategori=this.value">${opts}</select>
+        <div style="margin-top:14px">${baris}</div>
+        <div id="em-bal" style="display:none;margin-top:6px;padding:12px 14px;border-radius:14px;background:#FEF7E0">
+          <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+            <input id="em-bal-cb" type="checkbox" ${em.balancing ? 'checked' : ''} onchange="window._em.balancing=this.checked;emUpdate()" style="width:22px;height:22px;flex-shrink:0;accent-color:var(--primary);margin-top:1px">
+            <span id="em-bal-txt" style="font-size:13.5px;font-weight:600;color:var(--text);line-height:1.45"></span>
+          </label>
+        </div>
+        <div id="em-error" class="err"></div>
+        <button id="em-save" class="btn-primary" onclick="emSubmit()"><i data-lucide="check" style="width:18px;height:18px"></i> Simpan</button>
+      `);
+      emUpdate();
+    }
+
+    function emToggle(no, on) { window._em.pilih[no] = !!on; emUpdate(); }
+
+    // Perbarui ringkasan tanpa render ulang (supaya posisi scroll tidak melompat)
+    function emUpdate() {
+      const em = window._em;
+      if (!em || !em.data) return;
+      const h = emHitung();
+      const elS = document.getElementById('em-setelah');
+      if (elS) elS.textContent = fmtRp(h.setelah);
+      const wrap = document.getElementById('em-bal');
+      const txt = document.getElementById('em-bal-txt');
+      if (h.sisa === 0) em.balancing = false;
+      if (wrap) wrap.style.display = h.sisa === 0 ? 'none' : 'block';
+      if (txt) txt.textContent = 'Masih selisih ' + fmtRp(Math.abs(h.sisa)) + ' dari saldo kartu. Catat selisihnya sebagai transaksi "Balancing" (' + (h.sisa < 0 ? 'Keluar' : 'Masuk') + ').';
+      const cb = document.getElementById('em-bal-cb');
+      if (cb) cb.checked = !!em.balancing;
+      const btn = document.getElementById('em-save');
+      const ok = h.n > 0 || (em.balancing && h.sisa !== 0);
+      if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.45'; }
+    }
+
+    function emSubmit() {
+      const em = window._em, d = em.data;
+      const h = emHitung();
+      const picked = d.rows.filter(r => em.pilih[r.no]).map(r => ({ date: r.date, dir: r.dir, amount: r.amount, mid: r.mid }));
+      const bal = !!em.balancing && h.sisa !== 0;
+      if (!picked.length && !bal) { document.getElementById('em-error').textContent = 'Pilih minimal satu transaksi'; return; }
+      const btn = document.getElementById('em-save');
+      if (btn) { btn.disabled = true; btn.style.opacity = '0.45'; }
+      google.script.run
+        .withSuccessHandler(r => {
+          if (!r || !r.success) {
+            const el = document.getElementById('em-error');
+            if (el) el.textContent = (r && r.error) || 'Gagal menyimpan';
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+            return;
+          }
+          window._em = null;
+          closeModal();
+          showToast(r.count + ' transaksi E-Money disimpan');
+          loadData();
+        })
+        .withFailureHandler(() => {
+          const el = document.getElementById('em-error');
+          if (el) el.textContent = 'Gagal menyimpan, coba lagi';
+          if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        })
+        .emoneyTerapkan(em.akun, picked, em.kategori, bal, d.saldoKartu);
+    }
+</script>
