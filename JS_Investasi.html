@@ -1,0 +1,296 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - INVESTASI SEBAGAI TUMPUKAN KARTU (gaya "kartu gelap + notch + sparkline")
+     * ============================================================
+     * File terpisah (pola sama dengan JS_Tema / JS_Periksa / JS_Logo). Hanya TAMPILAN:
+     * data, perhitungan, cache, dan backend tidak berubah. Tombol memakai fungsi yang sudah ada:
+     * openInvestasiSetor, openInvestasiUpdateValue, openInvestasiJual, removeInvestasi.
+     * Wajib di-include PALING AKHIR di Index.html (setelah JS_Tema).
+     * Mau kembali ke tampilan lama: hapus baris include JS_Investasi.
+     *
+     * Catatan sparkline: KAYA belum menyimpan riwayat nilai, jadi garisnya menghubungkan
+     * Modal -> Nilai Sekarang (bukan grafik harian pasar).
+     */
+    const INV_H = 352;      // tinggi kartu (px)
+    const INV_GAP = 36;     // tinggi pita kartu yang mengintip (px)
+    const INV_EASE = 'transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease, filter .45s ease';
+    const INV_UP = '#86F898', INV_DOWN = '#FFB4A9';
+    const INV_WARNA_JENIS = {
+      'Reksadana': '#1A73E8', 'Saham': '#1E8E3E', 'Obligasi': '#F9AB00', 'SBN/Obligasi': '#F9AB00',
+      'Deposito': '#12B5CB', 'Emas': '#F9AB00', 'Kripto': '#E8710A'
+    };
+    // Depth of field: makin jauh dari depan = makin buram, redup, dan bayangan makin tipis.
+    // Bayangan ke ATAS jatuh di kartu di belakangnya, sehingga terlihat ada jarak antar kartu.
+    const INV_FILTER = [
+      'blur(0px) brightness(1) drop-shadow(0 -7px 10px rgba(0,0,0,0.55)) drop-shadow(0 16px 20px rgba(14,17,23,0.40))',
+      'blur(0.9px) brightness(0.80) drop-shadow(0 -6px 9px rgba(0,0,0,0.45)) drop-shadow(0 12px 16px rgba(14,17,23,0.30))',
+      'blur(2px) brightness(0.62) drop-shadow(0 -5px 8px rgba(0,0,0,0.35)) drop-shadow(0 8px 12px rgba(14,17,23,0.20))'
+    ];
+    // Cekungan (lekukan halus) di tengah atas kartu depan, dan versi kecil di tiap tombol.
+    function invSvgMask(w, h, d) {
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'><path d='${d}' fill='black'/></svg>`;
+      return 'url("data:image/svg+xml,' + encodeURIComponent(svg).replace(/'/g, '%27') + '")';
+    }
+    const INV_CEKUNG = invSvgMask(132, 22, 'M0 0 C 12 0, 16 4, 20 10 C 24 17, 30 22, 42 22 L90 22 C 102 22, 108 17, 112 10 C 116 4, 120 0, 132 0 Z');
+    const INV_CEKUNG_TOMBOL = invSvgMask(48, 10, 'M0 0 C 6 0, 8 2, 10 5 C 12 8, 15 10, 20 10 L28 10 C 33 10, 36 8, 38 5 C 40 2, 42 0, 48 0 Z');
+    (function () {
+      const st = document.createElement('style');
+      st.textContent = `
+        .inv-card.inv-front .inv-face {
+          -webkit-mask: ${INV_CEKUNG} top center / 132px 22px no-repeat, linear-gradient(#000, #000);
+          -webkit-mask-composite: xor;
+          mask: ${INV_CEKUNG} top center / 132px 22px no-repeat, linear-gradient(#000, #000);
+          mask-composite: exclude;
+        }
+        .inv-btn {
+          -webkit-mask: ${INV_CEKUNG_TOMBOL} top center / 48px 10px no-repeat, linear-gradient(#000, #000);
+          -webkit-mask-composite: xor;
+          mask: ${INV_CEKUNG_TOMBOL} top center / 48px 10px no-repeat, linear-gradient(#000, #000);
+          mask-composite: exclude;
+        }`;
+      document.head.appendChild(st);
+    })();
+
+    function invPecahNama(name) {
+      const s = String(name || '');
+      const m = s.match(/\(([^)]*)\)/);
+      return { main: s.replace(/\([^)]*\)/g, '').trim() || s, sub: m ? m[1].trim() : '' };
+    }
+    function invInisial(main) {
+      const w = String(main || '?').trim().split(/\s+/);
+      return (w.length > 1 ? w[0][0] + w[1][0] : String(main).slice(0, 2)).toUpperCase();
+    }
+    // Logo asli (Bibit/Stockbit) kalau ada; kalau tidak, kotak inisial berwarna menurut jenis
+    function invTile(inv, size) {
+      const key = typeof logoKeyFor_ === 'function' ? logoKeyFor_(inv.name, LOGO_RULES_INV) : '';
+      if (key) return logoHtml_(key, size);
+      const c = INV_WARNA_JENIS[inv.type] || '#1A73E8';
+      const nm = invPecahNama(inv.name).main;
+      return `<div style="width:${size}px;height:${size}px;border-radius:24%;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${Math.round(size * 0.4)}px;letter-spacing:-0.02em;flex-shrink:0">${escapeHtml(invInisial(nm))}</div>`;
+    }
+
+    function invList() { return state.investasi || []; }
+    function invHitung(inv) {
+      const modal = Number(inv.modal || 0), value = Number(inv.currentValue || 0);
+      const gain = value - modal;
+      return { modal, value, gain, pct: modal ? gain / modal * 100 : 0, up: gain >= 0 };
+    }
+
+    // Garis dari Modal ke Nilai Sekarang (kurva halus). Titik akhir dibuat dari elemen HTML supaya tetap bulat.
+    function invSpark(h, i) {
+      const lo = Math.min(h.modal, h.value), hi = Math.max(h.modal, h.value);
+      const yOf = v => hi === lo ? 28 : 50 - (v - lo) / (hi - lo) * 42;
+      const warna = h.up ? INV_UP : INV_DOWN;
+      const N = 24, pts = [];
+      for (let k = 0; k <= N; k++) {
+        const t = k / N, e = t * t * (3 - 2 * t);
+        pts.push([t * 260, yOf(h.modal + (h.value - h.modal) * e)]);
+      }
+      const d = pts.map((p, k) => (k ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const yEnd = pts[N][1];
+      return `<div style="position:relative;flex:1;min-height:64px;margin-bottom:12px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);overflow:hidden">
+        <svg viewBox="0 0 260 56" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+          <defs><linearGradient id="invg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${warna}" stop-opacity="0.32"/><stop offset="100%" stop-color="${warna}" stop-opacity="0"/></linearGradient></defs>
+          <path d="${d} L260,56 L0,56 Z" fill="url(#invg${i})"/>
+          <path d="${d}" fill="none" stroke="${warna}" stroke-width="2.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <span style="position:absolute;right:8px;top:calc(${(yEnd / 56 * 100).toFixed(1)}% - 4px);width:8px;height:8px;border-radius:50%;background:${warna};box-shadow:0 0 0 4px ${warna}33"></span>
+      </div>`;
+    }
+
+    function invPos(rel, n) {
+      const peek = Math.min(n - 1, 2);
+      const fl = INV_FILTER[Math.min(rel, 2)];
+      if (rel <= peek) return { t: `translate(0px,${(peek - rel) * INV_GAP}px) scale(${1 - 0.04 * rel})`, o: 1, z: 10 - rel, main: rel === 0 ? 1 : 0, peek: rel === 0 ? 0 : 1, f: fl };
+      return { t: 'translate(0px,0px) scale(0.85)', o: 0, z: 0, main: 0, peek: 0, f: INV_FILTER[2] };
+    }
+
+    function invKartuHtml(inv, i, n, f) {
+      const h = invHitung(inv), p = invPos((i - f + n) % n, n);
+      const nm = invPecahNama(inv.name);
+      const idq = escapeHtml(String(inv.id));
+      const warna = h.up ? INV_UP : INV_DOWN;
+      const tanda = h.up ? '+' : '';
+      // Ikon di atas tombol (di dalam cekungan), label di dalam tombol putih
+      const tombol = (ikon, label, fn) => `<div data-noswipe="1" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><i data-lucide="${ikon}" style="width:20px;height:20px;color:#E8EDF7;stroke-width:2.2"></i><button class="inv-btn" onclick="${fn}('${idq}')" style="width:100%;background:#FFFFFF;border:none;border-radius:18px;padding:14px 0 12px;cursor:pointer;color:#1F1F1F;font-size:14px;font-weight:800;line-height:1.1">${label}</button></div>`;
+      return `<div class="inv-card${p.main ? ' inv-front' : ''}" data-i="${i}" style="position:absolute;left:0;right:0;top:0;height:${INV_H}px;transform-origin:50% 0;transform:${p.t};opacity:${p.o};z-index:${p.z};pointer-events:${p.o ? 'auto' : 'none'};filter:${p.f};transition:${INV_EASE};will-change:transform,filter;color:#fff">
+        <div class="inv-face" style="position:absolute;inset:0;border-radius:30px;background:linear-gradient(180deg,#242B3A 0%,#171C26 55%,#0E1117 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 0 0 1px rgba(255,255,255,0.07)"></div>
+        <div class="inv-peek" style="position:absolute;left:20px;right:20px;top:7px;height:${INV_GAP - 12}px;display:flex;align-items:center;justify-content:space-between;gap:10px;opacity:${p.peek};transition:opacity .3s ease">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">${invTile(inv, 20)}<span style="font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nm.main)}</span></div>
+          <div class="tabular" style="display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:12px;font-weight:700"><span>${fmtHide(h.value)}</span><span style="color:${warna}">${tanda}${h.pct.toFixed(1)}%</span></div>
+        </div>
+        <div class="inv-main" style="box-sizing:border-box;position:absolute;inset:0;padding:22px 18px 16px;display:flex;flex-direction:column;opacity:${p.main};transition:opacity .3s ease">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              ${invTile(inv, 38)}
+              <div style="min-width:0">
+                <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(nm.main)}</div>
+                <div style="font-size:12px;color:#9AA3B2;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(inv.type || 'Investasi')}${nm.sub ? ' • ' + escapeHtml(nm.sub) : ''}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <span class="tabular" style="padding:4px 10px;border-radius:9999px;background:rgba(255,255,255,0.10);font-size:11.5px;font-weight:700">${i + 1}/${n}</span>
+              <button data-noswipe="1" onclick="removeInvestasi('${idq}')" aria-label="Hapus investasi" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.10);display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="trash-2" style="width:16px;height:16px;color:#D8DEE9"></i></button>
+            </div>
+          </div>
+          <div style="margin-top:14px;font-size:11px;font-weight:700;letter-spacing:0.08em;color:#9AA3B2">NILAI SEKARANG</div>
+          <div class="display tabular" style="font-size:30px;font-weight:800;letter-spacing:-0.02em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(h.value)}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:6px 0 10px">
+            <div style="display:flex;align-items:center;gap:8px"><span class="tabular" style="font-size:13.5px;font-weight:800;color:${warna}">${tanda}${fmtHide(h.gain)}</span><span class="tabular" style="padding:2px 9px;border-radius:9999px;background:${warna}26;color:${warna};font-size:11.5px;font-weight:800">${tanda}${h.pct.toFixed(1)}%</span></div>
+            <span class="tabular" style="font-size:12px;color:#9AA3B2;font-weight:600">Modal: ${fmtHide(h.modal)}</span>
+          </div>
+          ${invSpark(h, i)}
+          <div style="display:flex;gap:10px;margin-top:auto">
+            ${tombol('plus', 'Setor', 'openInvestasiSetor')}${tombol('refresh-cw', 'Update Nilai', 'openInvestasiUpdateValue')}${tombol('arrow-up-right', 'Jual', 'openInvestasiJual')}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ---------- Mesin tumpukan: sama dengan tumpukan Aset Lancar (geser BAWAH/KANAN = maju, ATAS/KIRI = mundur) ----------
+    let _invTimer = null, _invPend = null, _invDrag = null;
+    function invEl(i) { return document.querySelector('#inv-deck [data-i="' + i + '"]'); }
+    function invApply(el, p) {
+      el.style.transform = p.t; el.style.opacity = p.o; el.style.zIndex = p.z; el.style.filter = p.f;
+      el.style.pointerEvents = p.o ? 'auto' : 'none';
+      el.classList.toggle('inv-front', p.main === 1);
+      const m = el.querySelector('.inv-main'); if (m) m.style.opacity = p.main;
+      const l = el.querySelector('.inv-peek'); if (l) l.style.opacity = p.peek;
+    }
+    function invLayout(skipI) {
+      const deck = document.getElementById('inv-deck'); if (!deck) return;
+      const n = invList().length, f = window._invFront || 0;
+      deck.querySelectorAll('[data-i]').forEach(el => {
+        const i = Number(el.getAttribute('data-i'));
+        if (i === skipI) return;
+        el.style.transition = INV_EASE;
+        invApply(el, invPos((i - f + n) % n, n));
+      });
+      document.querySelectorAll('.inv-dot').forEach(d => {
+        const on = Number(d.getAttribute('data-i')) === f;
+        d.style.width = (on ? 18 : 6) + 'px'; d.style.background = on ? 'var(--primary)' : 'var(--border)';
+      });
+    }
+    function invFlush() {
+      if (_invTimer) { clearTimeout(_invTimer); _invTimer = null; }
+      if (_invPend) { const fn = _invPend; _invPend = null; fn(); }
+    }
+    // dir > 0: kartu depan meluncur ke bawah dan hilang, kartu di belakangnya maju.
+    // dir < 0: kebalikannya, kartu sebelumnya muncul dari bawah ke depan.
+    function invGo(newF, dir) {
+      const n = invList().length;
+      if (n < 2 || !document.getElementById('inv-deck')) return;
+      invFlush();
+      const old = window._invFront || 0;
+      newF = ((newF % n) + n) % n;
+      if (newF === old) { invLayout(); return; }
+      const off = Math.min(n - 1, 2) * INV_GAP + INV_H;
+      window._invFront = newF;
+      if (dir > 0) {
+        const out = invEl(old);
+        if (out) {
+          out.style.transition = 'transform .42s cubic-bezier(.4,0,.9,.6), opacity .3s ease .05s, filter .3s ease';
+          out.style.transform = `translate(0px,${off}px) scale(1)`;
+          out.style.opacity = 0; out.style.zIndex = 20; out.style.pointerEvents = 'none';
+        }
+        invLayout(old);
+        // Setelah hilang, kartu itu dipindah diam-diam ke urutan paling belakang lalu dimunculkan perlahan
+        _invPend = function () {
+          if (!out) return;
+          const p = invPos((old - window._invFront + n) % n, n);
+          out.style.transition = 'none';
+          invApply(out, Object.assign({}, p, { o: 0 }));
+          void out.offsetWidth;
+          out.style.transition = INV_EASE;
+          out.style.opacity = p.o; out.style.pointerEvents = p.o ? 'auto' : 'none';
+        };
+        _invTimer = setTimeout(invFlush, 430);
+      } else {
+        const inc = invEl(newF);
+        if (inc) {
+          inc.style.transition = 'none';
+          inc.style.transform = `translate(0px,${off}px) scale(1)`;
+          inc.style.opacity = 0; inc.style.zIndex = 20;
+          void inc.offsetWidth;
+        }
+        invLayout();
+      }
+    }
+    function invSet(i) {
+      const n = invList().length; if (n < 2) return;
+      const f = window._invFront || 0;
+      i = ((i % n) + n) % n;
+      if (i === f) return;
+      invGo(i, i === (f - 1 + n) % n ? -1 : 1);
+    }
+
+    function invDown(e) {
+      if (e.target.closest && e.target.closest('[data-noswipe]')) { _invDrag = null; return; } // biarkan tombol bekerja normal
+      invFlush();
+      const hit = e.target.closest ? e.target.closest('[data-i]') : null;
+      _invDrag = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false, i: hit ? Number(hit.getAttribute('data-i')) : -1 };
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
+    }
+    function invMove(e) {
+      const d = _invDrag; if (!d) return;
+      const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (!d.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      d.moved = true;
+      const n = invList().length; if (n < 2) return;
+      const front = invEl(window._invFront || 0); if (!front) return;
+      front.style.transition = 'none';
+      front.style.transform = `translate(${dx * 0.6}px,${Math.min(n - 1, 2) * INV_GAP + dy * 0.6}px) scale(1)`;
+    }
+    function invUp(e) {
+      const d = _invDrag; _invDrag = null; if (!d) return;
+      const n = invList().length, f = window._invFront || 0;
+      if (!d.moved) { if (n > 1 && d.i >= 0 && d.i !== f) invSet(d.i); return; } // ketuk kartu yang mengintip
+      const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      const v = Math.abs(dy) >= Math.abs(dx) ? dy : dx;   // ke bawah/kanan = maju, ke atas/kiri = mundur
+      const cepat = Date.now() - d.t < 300 && Math.abs(v) >= 24;
+      if (n > 1 && (Math.abs(v) >= 50 || cepat)) invGo(v > 0 ? f + 1 : f - 1, v > 0 ? 1 : -1);
+      else invLayout();
+    }
+    function invCancel() { _invDrag = null; invLayout(); }
+
+    function invDeckHtml() {
+      const list = invList(), n = list.length;
+      let f = window._invFront || 0;
+      if (f >= n) f = 0;
+      window._invFront = f;
+      const tinggi = Math.min(n - 1, 2) * INV_GAP + INV_H;
+      const dots = n > 1 ? `<div style="display:flex;justify-content:center;align-items:center;margin-top:10px">
+          ${list.map((x, i) => `<button onclick="invSet(${i})" aria-label="${escapeHtml(x.name)}" style="background:none;border:none;padding:8px 4px;cursor:pointer"><span class="inv-dot" data-i="${i}" style="display:block;height:6px;width:${i === f ? 18 : 6}px;border-radius:999px;background:${i === f ? 'var(--primary)' : 'var(--border)'};transition:width .3s ease,background .3s ease"></span></button>`).join('')}
+        </div>
+        <div style="text-align:center;font-size:11.5px;color:var(--text-muted);font-weight:600;margin-top:-2px">Geser kartu untuk berganti investasi</div>` : '';
+      return `<div style="margin-bottom:16px">
+        <div id="inv-deck" onpointerdown="invDown(event)" onpointermove="invMove(event)" onpointerup="invUp(event)" onpointercancel="invCancel()" style="position:relative;height:${tinggi}px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none">
+          ${list.map((inv, i) => invKartuHtml(inv, i, n, f)).join('')}
+        </div>
+        ${dots}
+      </div>`;
+    }
+
+    // Ganti baris geser "Investasi" bawaan dengan tumpukan kartu (blok div dicari dengan hitung kurung)
+    (function () {
+      const renderAsetSebelumnya = renderAset;
+      renderAset = function () {
+        const html = renderAsetSebelumnya();
+        if (invList().length === 0) return html;
+        const marker = html.indexOf('<span>Investasi</span>');
+        if (marker < 0) return html;
+        const start = html.indexOf('<div class="horizontal-scroll"', marker);
+        if (start < 0) return html;
+        const re = /<div\b|<\/div>/g;
+        re.lastIndex = start;
+        let depth = 0, end = -1, m;
+        while ((m = re.exec(html))) {
+          if (m[0] === '</div>') { depth--; if (depth === 0) { end = m.index + 6; break; } }
+          else depth++;
+        }
+        if (end < 0) return html;
+        return html.slice(0, start) + invDeckHtml() + html.slice(end);
+      };
+    })();
+</script>
