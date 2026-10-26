@@ -1,0 +1,62 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - LOGO AKUN & INVESTASI (mesin logo)
+     * Versi repo: daftar logo KOSONG, jadi semua akun memakai ikon Lucide bawaan.
+     * Mau pakai logo sendiri? Jangan ubah file ini. Isi file JS_LogoSaya.html
+     * (sudah ada contoh dan petunjuknya di dalamnya).
+     * Wajib di-include SETELAH JS_Core dan SEBELUM JS_LogoSaya di Index.html
+     * (memakai iconBubble & accMeta).
+     * ============================================================
+     */
+
+    // Daftar gambar logo. Diisi dari JS_LogoSaya.html, mis. KAYA_LOGOS.bca = { src: '...', shape: 'app' }
+    const KAYA_LOGOS = {};
+
+    // Aturan pencocokan: [kata di nama akun (huruf kecil), kunci logo].
+    // Urutan penting: aturan pertama yang cocok dipakai. Diisi dari JS_LogoSaya.html.
+    const LOGO_RULES_AKUN = [];
+    // Untuk kartu investasi (nama seperti "Pasar Uang (Bibit)"). Diisi dari JS_LogoSaya.html.
+    const LOGO_RULES_INV = [];
+
+    function logoKeyFor_(name, rules) {
+      const n = String(name || '').toLowerCase();
+      const hit = rules.find(r => n.includes(r[0]));
+      return hit ? hit[1] : '';
+    }
+
+    function logoHtml_(key, s) {
+      const L = KAYA_LOGOS[key];
+      if (!L) return '';
+      const base = 'flex-shrink:0;display:block;';
+      if (L.shape === 'app') return `<img src="${L.src}" alt="" style="${base}width:${s}px;height:${s}px;border-radius:24%;object-fit:cover">`;
+      if (L.shape === 'card') return `<img src="${L.src}" alt="" style="${base}width:${Math.round(s * L.ratio)}px;height:${s}px;border-radius:${Math.max(4, Math.round(s * 0.14))}px;object-fit:cover">`;
+      const w = L.shape === 'wide' ? Math.round(s * 1.9) : s;
+      const h = L.shape === 'wide' ? Math.round(s * 0.72) : s;
+      const radius = L.shape === 'circle' ? '50%' : '24%';
+      const pad = L.shape === 'circle' ? 16 : (L.shape === 'wide' ? 12 : 14);
+      return `<div style="${base}width:${w}px;height:${h}px;border-radius:${radius};background:#FFFFFF;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="${L.src}" alt="" style="width:calc(100% - ${pad}px);height:calc(100% - ${pad}px);object-fit:contain"></div>`;
+    }
+
+    // Pengganti iconBubble untuk akun: pakai logo kalau ada, kalau tidak ikon biasa.
+    function accIcon(name, idx, type, size) {
+      const key = logoKeyFor_(name, LOGO_RULES_AKUN);
+      if (key) return logoHtml_(key, size);
+      const m = accMeta(name, idx, type);
+      return iconBubble(m.icon, m.color, size);
+    }
+
+    function invIcon(inv, size) {
+      const key = logoKeyFor_(inv && inv.name, LOGO_RULES_INV);
+      if (key) return logoHtml_(key, size);
+      return iconBubble('trending-up', '#00C896', size);
+    }
+
+    // Gambar kartu besar (khusus akun yang punya foto kartu), untuk header detail kartu kredit.
+    function cardBanner(name) {
+      const key = logoKeyFor_(name, LOGO_RULES_AKUN);
+      const L = KAYA_LOGOS[key];
+      if (!L || L.shape !== 'card') return '';
+      return `<img src="${L.src}" alt="" style="display:block;width:100%;max-width:260px;margin:0 auto 16px;border-radius:14px">`;
+    }
+</script>
