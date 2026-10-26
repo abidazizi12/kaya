@@ -1,0 +1,750 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - TEMA "KINETIC FINANCIAL" (desain Google-style)
+     * ============================================================
+     * File terpisah (pola yang sama dengan JS_Periksa / JS_Logo) supaya JS_Core, JS_Halaman,
+     * JS_Fitur tidak perlu diubah. Menimpa tampilan saja; TIDAK menyentuh perhitungan saldo,
+     * data, cache, maupun fungsi backend.
+     * Wajib di-include PALING AKHIR di Index.html (setelah JS_Periksa).
+     * Mau kembali ke tampilan lama: hapus baris include JS_Tema + pakai Index.html lama.
+     */
+
+    // Kategori internal yang TIDAK dihitung sebagai pemasukan/pengeluaran (sama dengan aturan di seluruh KAYA)
+    const TEMA_EXCL = ['Transfer Antar Rekening', 'Pembayaran CC', 'Hutang Piutang'];
+
+    // ---------- Palet warna: 4 warna Google ----------
+    const TEMA_WARNA = {
+      '#7C6CF6': '#1A73E8', '#1B2F5E': '#1A73E8', '#F2836B': '#EA4335', '#16B879': '#1E8E3E',
+      '#00C896': '#34A853', '#3E9EFF': '#4285F4', '#FFA53D': '#F9AB00', '#E14C74': '#EA4335',
+      '#FF6F91': '#EA4335', '#928DAA': '#80868B'
+    };
+    function temaWarna(c) { return TEMA_WARNA[String(c || '').toUpperCase()] || c; }
+
+    const TEMA_GRUP = {
+      'PENGHASILAN': '#1E8E3E', 'KEBUTUHAN': '#1A73E8', 'KEINGINAN': '#F9AB00', 'KELUARGA & SOSIAL': '#E8710A',
+      'PENGEMBANGAN DIRI': '#12B5CB', 'MASA DEPAN': '#34A853', 'KEWAJIBAN KEUANGAN': '#EA4335',
+      'NON-SPENDING': '#80868B', 'LAINNYA': '#80868B'
+    };
+    const TEMA_KAT_GRUP = {
+      'Gaji': 'PENGHASILAN', 'Bonus': 'PENGHASILAN', 'Penghasilan Lain': 'PENGHASILAN',
+      'Makanan': 'KEBUTUHAN', 'Minuman': 'KEBUTUHAN', 'Rumah Tangga': 'KEBUTUHAN', 'Tagihan & Utilitas': 'KEBUTUHAN', 'Transportasi': 'KEBUTUHAN', 'Kesehatan': 'KEBUTUHAN',
+      'Hiburan': 'KEINGINAN', 'Belanja': 'KEINGINAN', 'Langganan': 'KEINGINAN', 'Perjalanan': 'KEINGINAN', 'Lifestyle': 'KEINGINAN',
+      'Keluarga': 'KELUARGA & SOSIAL', 'Hadiah': 'KELUARGA & SOSIAL', 'Donasi': 'KELUARGA & SOSIAL',
+      'Pendidikan': 'PENGEMBANGAN DIRI',
+      'Tabungan': 'MASA DEPAN', 'Dana Darurat': 'MASA DEPAN', 'Investasi': 'MASA DEPAN',
+      'Cicilan': 'KEWAJIBAN KEUANGAN', 'Biaya Bank': 'KEWAJIBAN KEUANGAN', 'Pembayaran CC': 'KEWAJIBAN KEUANGAN', 'Hutang Piutang': 'KEWAJIBAN KEUANGAN',
+      'Transfer Antar Rekening': 'NON-SPENDING', 'Refund': 'NON-SPENDING', 'Lainnya': 'LAINNYA'
+    };
+    Object.keys(GROUP_META).forEach(g => { if (TEMA_GRUP[g]) GROUP_META[g].color = TEMA_GRUP[g]; });
+    Object.keys(CATEGORY_META).forEach(n => { CATEGORY_META[n].color = TEMA_GRUP[TEMA_KAT_GRUP[n] || 'LAINNYA']; });
+
+    // Ikon bulat versi lembut: latar tint 12% + ikon berwarna (bukan lagi bulatan solid berikon putih)
+    function iconBubble(icon, color, size) {
+      size = size || 50;
+      const c = temaWarna(color);
+      const hex = /^#[0-9a-f]{6}$/i.test(c);
+      const bg = hex ? c + '1F' : c;
+      const fg = hex ? (c.toUpperCase() === '#F9AB00' ? '#B06000' : c) : 'white';
+      return `<div class="icon-bubble" style="width:${size}px;height:${size}px;background:${bg}">
+        <i data-lucide="${icon}" style="width:${Math.round(size * 0.5)}px;height:${Math.round(size * 0.5)}px;color:${fg};stroke-width:2.2"></i>
+      </div>`;
+    }
+
+    // ---------- Navigasi bawah: Beranda | Dompet | [+] | Analisis | Anggaran ----------
+    // Tiap tab punya warna aktif sendiri: c = warna ikon/teks, bg = warna latar pil ikon.
+    function renderNav() {
+      const items = [
+        { tab: 'home', icon: 'home', label: 'Beranda', c: '#1A73E8', bg: '#E8F0FE' },
+        { tab: 'aset', icon: 'wallet', label: 'Dompet', c: '#1E8E3E', bg: '#E6F4EA' },
+        null,
+        { tab: 'report', icon: 'bar-chart-3', label: 'Analisis', c: '#B06000', bg: '#FEF3D6' },
+        { tab: 'pengaturan_budget', icon: 'pie-chart', label: 'Anggaran', c: '#0B7285', bg: '#E0F4F7' }
+      ];
+      document.getElementById('bottomnav').innerHTML = items.map(it => it
+        ? `<button class="navbtn ${state.tab === it.tab ? 'active' : ''}" style="--c:${it.c};--cbg:${it.bg}" onclick="setTab('${it.tab}')">
+             <div class="navdot"><i data-lucide="${it.icon}" style="width:22px;height:22px"></i></div><span>${it.label}</span>
+           </button>`
+        : '<div style="width:64px;flex-shrink:0"></div>').join('');
+    }
+
+    // ---------- App bar atas ----------
+    const TEMA_JUDUL = {
+      home: 'Beranda', aset: 'Dompet', report: 'Analisis', pengaturan: 'Pengaturan', pengaturan_akun: 'Kelola Akun',
+      pengaturan_budget: 'Anggaran', tabungan: 'Target Tabungan', hutang: 'Hutang & Cicilan',
+      berulang: 'Transaksi Berulang', periksa: 'Perlu Diperiksa'
+    };
+    // Tombol di kanan, urut dari kiri: sembunyikan saldo, pengaturan, refresh (paling kanan)
+    function renderAppbar() {
+      const el = document.getElementById('appbar');
+      if (!el) return;
+      el.innerHTML = `<div class="appbar-in">
+        <div class="appbar-left">
+          <div class="appbar-logo">K</div>
+          <div style="min-width:0"><div class="appbar-sub">KAYA Tracker</div><div class="appbar-title">${escapeHtml(TEMA_JUDUL[state.tab] || 'KAYA')}</div></div>
+        </div>
+        <div class="appbar-right">
+          <button class="appbar-btn" onclick="toggleHideBalance()" aria-label="Tampilkan atau sembunyikan saldo">
+            <i data-lucide="${state.hideBalance ? 'eye-off' : 'eye'}" style="width:22px;height:22px"></i>
+          </button>
+          <button class="appbar-btn" onclick="setTab('pengaturan')" aria-label="Pengaturan">
+            <i data-lucide="settings" style="width:22px;height:22px;${state.tab === 'pengaturan' ? 'color:var(--primary)' : ''}"></i>
+          </button>
+          <button class="appbar-btn" onclick="refreshData()" aria-label="Muat ulang data">
+            <i data-lucide="refresh-cw" style="width:22px;height:22px"></i>
+          </button>
+        </div>
+      </div>`;
+      lucide.createIcons();
+    }
+    // Judul layar sekarang ada di app bar, jadi header di dalam halaman dikosongkan
+    function screenHeader() { return ''; }
+
+    // Bungkus render() (setelah pembungkus JS_Periksa) agar app bar ikut diperbarui
+    (function () {
+      const renderSebelumnya = render;
+      render = function () { renderSebelumnya(); renderAppbar(); };
+    })();
+
+    // Logo di halaman Pengaturan disamakan dengan logo lain (kotak biru + K putih)
+    (function () {
+      const pengaturanAsli = renderPengaturan;
+      renderPengaturan = function () {
+        return pengaturanAsli().replace(
+          /<div[^>]*width:64px;height:64px;background:var\(--navy-deep\)[^>]*>\s*<span[^>]*>K<\/span>\s*<\/div>/,
+          '<div class="kaya-mark" style="width:64px;height:64px;border-radius:20px;font-size:32px;box-shadow:0 8px 16px -6px rgba(26,115,232,0.5)">K</div>'
+        );
+      };
+    })();
+
+    // ---------- Helper data bulan ini (memakai aturan pengecualian yang sama) ----------
+    function temaBulan() {
+      const now = new Date();
+      const pre = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      let masuk = 0, keluar = 0;
+      state.transactions.forEach(t => {
+        if (TEMA_EXCL.includes(t.category) || String(t.date).slice(0, 7) !== pre) return;
+        if (t.type === 'Masuk') masuk += Number(t.amount); else keluar += Number(t.amount);
+      });
+      return { masuk, keluar, pre };
+    }
+
+    // Pengeluaran bulan ini per grup kategori (urut terbesar)
+    function temaSpendByGroup() {
+      const { spendCurrent } = getMonthlySpends();
+      const gOf = {};
+      state.categories.forEach(c => { gOf[c.name] = c.group; });
+      const per = {};
+      let total = 0;
+      Object.keys(spendCurrent).forEach(n => {
+        const g = gOf[n] || 'LAINNYA';
+        per[g] = (per[g] || 0) + spendCurrent[n];
+        total += spendCurrent[n];
+      });
+      const list = Object.keys(per).map(g => ({ group: g, value: per[g], meta: groupMeta(g) })).sort((a, b) => b.value - a.value);
+      return { list, total, spendCurrent };
+    }
+
+    function temaSecHead(judul, linkLabel, aksi) {
+      return `<div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
+        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.01em">${judul}</div>
+        ${linkLabel ? `<button onclick="${aksi}" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:13px;font-weight:700;display:flex;align-items:center;gap:2px;padding:4px 0">${linkLabel}<i data-lucide="chevron-right" style="width:16px;height:16px"></i></button>` : ''}
+      </div>`;
+    }
+
+    // ---------- Beranda (Kategori sudah dipindah ke Analisis) ----------
+    function renderHome() {
+      let income = 0, expense = 0;
+      state.transactions.filter(t => !TEMA_EXCL.includes(t.category)).forEach(t => t.type === 'Masuk' ? income += Number(t.amount) : expense += Number(t.amount));
+
+      const asetLancar = state.accounts.filter(a => a.type !== 'Kredit');
+      const totalLancar = asetLancar.reduce((sum, a) => sum + accountBalance(a.name), 0);
+      const bln = temaBulan();
+      const selisih = bln.masuk - bln.keluar;
+      const naik = selisih >= 0;
+
+      const now = new Date();
+      const strToday = getLocalDateString(now);
+      const yest = new Date(now); yest.setDate(yest.getDate() - 1);
+      const strYest = getLocalDateString(yest);
+      const grouped = {};
+      state.transactions
+        .filter(t => t.date === strToday || t.date === strYest)
+        .sort((a, b) => a.date < b.date ? 1 : -1)
+        .forEach(t => { (grouped[t.date] = grouped[t.date] || []).push(t); });
+      const dates = Object.keys(grouped).sort().reverse();
+
+      const aksi = (ikon, label, fn, solid) => `
+        <button onclick="${fn}" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0">
+          <div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${solid ? '#FFFFFF' : 'rgba(255,255,255,0.18)'};color:${solid ? 'var(--primary)' : '#FFFFFF'};box-shadow:${solid ? '0 4px 10px rgba(0,0,0,0.15)' : 'none'}"><i data-lucide="${ikon}" style="width:22px;height:22px"></i></div>
+          <span style="font-size:12px;font-weight:600;color:#FFFFFF">${label}</span>
+        </button>`;
+
+      const hero = `
+        <div style="position:relative;border-radius:28px;padding:22px 20px 20px;overflow:hidden;background:var(--hero-gradient);box-shadow:0 12px 28px -6px rgba(26,115,232,0.38)">
+          <div style="position:absolute;top:-48px;right:-48px;width:176px;height:176px;border-radius:50%;background:rgba(255,255,255,0.10)"></div>
+          <div style="position:absolute;bottom:-32px;left:-32px;width:144px;height:144px;border-radius:50%;background:rgba(134,248,152,0.14)"></div>
+          <div style="position:relative;z-index:1">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px;min-width:0"><i data-lucide="shield-check" style="width:16px;height:16px;color:#D8E2FF;flex-shrink:0"></i><span style="font-size:11px;font-weight:700;letter-spacing:0.04em;color:#D8E2FF;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Saldo Bersih (Aset Lancar)</span></div>
+              <span class="tabular" style="flex-shrink:0;display:inline-flex;align-items:center;gap:2px;padding:3px 10px;border-radius:9999px;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700"><i data-lucide="${naik ? 'arrow-up' : 'arrow-down'}" style="width:12px;height:12px"></i>${state.hideBalance ? 'Bulan ini' : (naik ? '+' : '-') + fmtRpShort(Math.abs(selisih)) + ' bln ini'}</span>
+            </div>
+            <div class="display tabular" style="color:#fff;font-size:36px;font-weight:800;line-height:1.2;margin-top:10px;letter-spacing:-0.025em">${fmtHide(totalLancar)}</div>
+            <div style="font-size:12px;color:#D8E2FF;margin-top:2px">Tersedia di ${asetLancar.length} akun lancar</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.18)">
+              ${aksi('arrow-up-right', 'Keluar', "openAddModal('Keluar')", true)}
+              ${aksi('arrow-down-left', 'Masuk', "openAddModal('Masuk')", false)}
+              ${aksi('arrow-right-left', 'Transfer', 'openTransferModal()', false)}
+              ${aksi('scroll-text', 'Hutang', "setTab('hutang')", false)}
+            </div>
+            <div style="display:flex;gap:10px;margin-top:18px">
+              <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:16px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><i data-lucide="arrow-down-left" style="width:14px;height:14px;color:#fff"></i><span style="font-size:12px;color:#D8E2FF;font-weight:600">Total Pemasukan</span></div>
+                <div class="tabular" style="font-size:15px;color:#fff;font-weight:800">${fmtHide(income)}</div>
+              </div>
+              <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:16px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><i data-lucide="arrow-up-right" style="width:14px;height:14px;color:#fff"></i><span style="font-size:12px;color:#D8E2FF;font-weight:600">Total Pengeluaran</span></div>
+                <div class="tabular" style="font-size:15px;color:#fff;font-weight:800">${fmtHide(expense)}</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      // Komposisi pengeluaran bulan ini (data nyata, per grup kategori)
+      const sg = temaSpendByGroup();
+      let komposisi = '';
+      if (sg.total > 0) {
+        const seg = sg.list.map((s, i) => `<div title="${escapeHtml(s.meta.label)}" style="height:100%;width:${(s.value / sg.total * 100).toFixed(2)}%;background:${s.meta.color};${i === 0 ? 'border-radius:999px 0 0 999px;' : ''}${i === sg.list.length - 1 ? 'border-radius:0 999px 999px 0;' : ''}"></div>`).join('');
+        const legend = sg.list.slice(0, 4).map(s => `<div style="display:flex;align-items:center;gap:5px;min-width:0;font-size:11px;font-weight:600;color:var(--text-muted)"><span style="width:7px;height:7px;border-radius:50%;background:${s.meta.color};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.meta.label)} ${Math.round(s.value / sg.total * 100)}%</span></div>`).join('');
+        komposisi = `
+        <div class="card" style="padding:16px;margin-top:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px">${iconBubble('pie-chart', '#1A73E8', 32)}<span style="font-size:14px;font-weight:700;color:var(--text)">Komposisi Pengeluaran</span></div>
+            <span class="tabular" style="padding:3px 10px;border-radius:9999px;background:#E8F0FE;color:#1967D2;font-size:11px;font-weight:700;white-space:nowrap">${fmtHide(sg.total)} bln ini</span>
+          </div>
+          <div style="height:10px;border-radius:999px;background:var(--surface-raised);overflow:hidden;display:flex;gap:2px">${seg}</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin-top:12px">${legend}</div>
+        </div>`;
+      }
+
+      // Insight dari data nyata: kategori terbesar bulan ini + peringatan budget grup bila >= 80%
+      let insight = '';
+      if (sg.total > 0) {
+        const topKat = Object.keys(sg.spendCurrent).sort((a, b) => sg.spendCurrent[b] - sg.spendCurrent[a])[0];
+        const topPct = Math.round(sg.spendCurrent[topKat] / sg.total * 100);
+        const gOf = {}; state.categories.forEach(c => { gOf[c.name] = c.group; });
+        const spentG = {}; Object.keys(sg.spendCurrent).forEach(n => { const g = gOf[n] || 'LAINNYA'; spentG[g] = (spentG[g] || 0) + sg.spendCurrent[n]; });
+        const warn = Object.keys(state.groupBudgets || {}).map(g => ({ g, b: Number(state.groupBudgets[g] || 0), s: spentG[g] || 0 }))
+          .filter(x => x.b > 0 && x.s / x.b >= 0.8).sort((a, b) => b.s / b.b - a.s / a.b)[0];
+        const warna = warn ? '#B06000' : '#006E2C';
+        const bg = warn ? '#FEF7E0' : '#E6F4EA';
+        const teks = warn
+          ? `Budget <b>${escapeHtml(groupMeta(warn.g).label)}</b> sudah terpakai <b style="color:${warna}">${Math.round(warn.s / warn.b * 100)}%</b> (${fmtHide(warn.s)} dari ${fmtHide(warn.b)}).`
+          : `Pengeluaran terbesar bulan ini: <b>${escapeHtml(topKat)}</b>, <b style="color:${warna}">${fmtHide(sg.spendCurrent[topKat])}</b> (${topPct}% dari total).`;
+        insight = `
+        <div style="margin-top:14px;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;background:${bg}">
+          <div style="width:36px;height:36px;border-radius:50%;background:${warn ? '#F9AB00' : '#1E8E3E'};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="${warn ? 'alert-triangle' : 'sparkles'}" style="width:18px;height:18px;color:#fff"></i></div>
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;font-weight:800;letter-spacing:0.04em;color:${warna}">INSIGHT KAYA</span><span style="font-size:11px;color:var(--text-muted);font-weight:600">Bulan ini</span></div>
+            <div style="font-size:14px;line-height:1.45;color:var(--text)">${teks}</div>
+          </div>
+        </div>`;
+      }
+
+      const akunLancar = `
+        ${temaSecHead('Akun Lancar', 'Dompet', "setTab('aset')")}
+        <div class="horizontal-scroll" style="margin:0 -20px;padding:0 20px 8px">
+          ${asetLancar.map((a, i) => `
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:140px">
+              <div style="height:38px;display:flex;align-items:center;justify-content:center">${accIcon(a.name, i, a.type, 38)}</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:10px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</div>
+              <div class="tabular" style="font-size:14px;font-weight:800;color:var(--text);margin-top:4px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(accountBalance(a.name))}</div>
+            </div>`).join('')}
+        </div>`;
+
+      // Kantong Impian = target tabungan nyata (sheet Tabungan)
+      const kantong = (state.tabungan || []).length === 0 ? '' : `
+        ${temaSecHead('Kantong Impian', 'Kelola', "setTab('tabungan')")}
+        <div class="horizontal-scroll" style="margin:0 -20px;padding:0 20px 8px">
+          ${state.tabungan.map(g => {
+            const pct = g.target ? Math.min(100, Math.round((g.collected / g.target) * 100)) : 0;
+            const warna = pct >= 100 ? '#1E8E3E' : '#1A73E8';
+            return `<div class="card" onclick="setTab('tabungan')" style="padding:16px;width:240px;cursor:pointer">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">${iconBubble('piggy-bank', warna, 34)}<span style="padding:2px 10px;border-radius:9999px;background:${warna}1F;color:${warna};font-size:11px;font-weight:700">${pct}%</span></div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.name)}</div>
+              <div class="tabular" style="font-size:16px;font-weight:700;color:var(--text);margin-top:4px">${fmtRp(g.collected)} <span style="font-size:12px;font-weight:500;color:var(--text-muted)">/ ${fmtRpShort(g.target)}</span></div>
+              <div style="height:6px;border-radius:999px;background:var(--surface-raised);margin-top:12px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${warna};border-radius:999px"></div></div>
+            </div>`;
+          }).join('')}
+        </div>`;
+
+      const aktivitas = `
+        ${temaSecHead('Aktivitas Terkini', 'Lihat Semua', "setTab('report')")}
+        ${dates.length === 0 ? '<div style="color:var(--text-muted);font-size:15px;padding:24px 0;text-align:center">Belum ada transaksi hari ini atau kemarin.</div>' : ''}
+        ${dates.map(date => `
+          <div class="card" style="margin-bottom:14px;padding:18px 18px">
+            <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtDateLabel(date)}</div>
+            ${grouped[date].map(t => txRow(t, false)).join('')}
+          </div>`).join('')}`;
+
+      return hero + komposisi + insight + akunLancar + kantong + aktivitas;
+    }
+
+    // ---------- Analisis: donut komposisi di atas grafik tren ----------
+    function temaDonut() {
+      const sg = temaSpendByGroup();
+      const bulan = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      if (sg.total <= 0) {
+        return `<div class="card" style="padding:20px;margin-bottom:20px;text-align:center;color:var(--text-muted);font-size:14px;font-weight:500">Belum ada pengeluaran bulan ini.</div>`;
+      }
+      const R = 78, C = 2 * Math.PI * R, GAP = sg.list.length > 1 ? 3 : 0;
+      let acc = 0;
+      const arcs = sg.list.map(s => {
+        const len = Math.max(0, (s.value / sg.total) * C - GAP);
+        const el = `<circle cx="100" cy="100" r="${R}" fill="none" stroke="${s.meta.color}" stroke-width="26" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-acc}" transform="rotate(-90 100 100)"/>`;
+        acc += (s.value / sg.total) * C;
+        return el;
+      }).join('');
+      const legend = sg.list.map(s => `<div style="display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;font-weight:600;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:${s.meta.color};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.meta.label)}: ${Math.round(s.value / sg.total * 100)}%</span></div>`).join('');
+      return `<div class="card" style="padding:20px 18px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted);text-transform:uppercase">Komposisi Pengeluaran</span>
+          <span style="font-size:12px;font-weight:700;color:var(--primary)">${bulan}</span>
+        </div>
+        <div style="position:relative;width:190px;height:190px;margin:8px auto 14px">
+          <svg viewBox="0 0 200 200" width="190" height="190"><circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--surface-raised)" stroke-width="26"/>${arcs}</svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 38px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">TOTAL BELANJA</span>
+            <span class="tabular" style="font-size:15px;font-weight:800;color:var(--text);margin-top:2px;white-space:nowrap">${fmtHide(sg.total)}</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;background:#F8FAFD;border-radius:14px;padding:12px 14px">${legend}</div>
+      </div>`;
+    }
+    (function () {
+      const lineAsli = renderLineChart;
+      renderLineChart = function () { return temaDonut() + lineAsli(); };
+    })();
+
+    // ---------- Analisis: halaman baru (Kategori di atas, tanpa progres anggaran, filter ringkas) ----------
+    const TEMA_BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    function temaNamaBulan(ym) {
+      if (ym === 'Semua') return 'Semua Waktu';
+      const p = ym.split('-');
+      return TEMA_BULAN[parseInt(p[1], 10) - 1] + ' ' + p[0];
+    }
+
+    // Daftar transaksi terfilter (dipisah supaya pencarian cukup me-refresh bagian ini saja)
+    function temaTxListHtml() {
+      const filtered = [...state.transactions]
+        .filter(t => state.txFilter === 'Semua' || t.type === state.txFilter)
+        .filter(t => state.txAccount === 'Semua' || t.account === state.txAccount)
+        .filter(t => state.txPeriod === 'Semua' || String(t.date).startsWith(state.txPeriod))
+        .filter(t => {
+          if (!state.txQuery) return true;
+          const q = state.txQuery.toLowerCase();
+          const cat = state.categories.find(c => c.name === t.category) || {};
+          const gLabel = (GROUP_META[cat.group] || {}).label || '';
+          return (t.desc || '').toLowerCase().includes(q) || (t.category || '').toLowerCase().includes(q) || gLabel.toLowerCase().includes(q);
+        })
+        .sort((a, b) => a.date < b.date ? 1 : -1);
+
+      const byDate = {};
+      filtered.forEach(t => { (byDate[t.date] = byDate[t.date] || []).push(t); });
+      const dates = Object.keys(byDate).sort().reverse();
+      if (dates.length === 0) {
+        return '<div class="card" style="padding:24px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500">Tidak ada transaksi ditemukan.</div>';
+      }
+      return dates.map(date => `
+        <div class="card" style="margin-bottom:14px;padding:18px 18px">
+          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtDateLabel(date)}</div>
+          ${byDate[date].map((t, i) => `
+            <div style="${i > 0 ? 'border-top:1px dashed var(--border);padding-top:6px;margin-top:6px' : ''}">${txRow(t, true)}</div>`).join('')}
+        </div>`).join('');
+    }
+
+    // Pencarian: hanya ganti isi daftar (kursor di kolom cari tidak hilang)
+    function temaCariTx(v) {
+      state.txQuery = v;
+      const el = document.getElementById('tx-list');
+      if (el) { el.innerHTML = temaTxListHtml(); lucide.createIcons(); }
+    }
+
+    // Ketuk kategori = filter daftar transaksi, lalu geser ke daftar. Ketuk lagi = batal.
+    function temaPilihKategori(label) {
+      state.txQuery = state.txQuery === label ? '' : label;
+      render();
+      if (state.txQuery) {
+        const el = document.getElementById('tx-list');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function renderReport() {
+      const now = new Date();
+      const bulanIni = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+      state.txFilter = state.txFilter || 'Semua';
+      if (!state.txPeriod || state.txPeriod === 'Minggu Ini' || state.txPeriod === 'Bulan Ini') state.txPeriod = bulanIni;
+      state.txAccount = state.txAccount || 'Semua';
+      state.txQuery = state.txQuery || '';
+
+      const months = [...new Set(state.transactions.map(t => String(t.date).substring(0, 7)))].sort().reverse();
+      if (!months.includes(bulanIni)) months.unshift(bulanIni);
+
+      const kategori = GROUP_ORDER.filter(g => g !== 'LAINNYA' && state.categories.some(c => c.group === g)).map(g => {
+        const gm = groupMeta(g);
+        const aktif = state.txQuery === gm.label;
+        return `<div onclick="temaPilihKategori('${gm.label}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:72px">
+          <div style="padding:3px;border-radius:50%;border:2px solid ${aktif ? gm.color : 'transparent'}">${iconBubble(gm.icon, gm.color, 48)}</div>
+          <span style="font-size:11px;color:${aktif ? 'var(--text)' : 'var(--text-muted)'};margin-top:6px;text-align:center;font-weight:${aktif ? 800 : 600};line-height:1.25">${gm.label}</span>
+        </div>`;
+      }).join('');
+
+      const segBtn = f => {
+        const on = state.txFilter === f;
+        return `<button onclick="state.txFilter='${f}';render()" style="flex:1;padding:8px 0;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;background:${on ? 'var(--primary)' : 'transparent'};color:${on ? '#fff' : 'var(--text-muted)'};box-shadow:${on ? '0 3px 8px -2px rgba(26,115,232,0.45)' : 'none'};transition:0.2s">${f}</button>`;
+      };
+      const selStyle = 'flex:1;min-width:0;background:var(--surface-raised);border:none;border-radius:12px;padding:9px 8px;color:var(--text);font-size:19px;font-weight:700;outline:none;cursor:pointer;text-overflow:ellipsis';
+
+      return `
+        ${renderFinancialSummary()}
+        ${renderLineChart()}
+
+        ${temaSecHead('Kategori', '', '')}
+        <div class="horizontal-scroll" style="margin:-4px -20px 0;padding:0 20px 8px;gap:14px">${kategori}</div>
+
+        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.01em;margin:24px 0 12px">Semua transaksi</div>
+
+        <div class="card" style="padding:12px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--surface-raised);border-radius:12px;padding:8px 12px;margin-bottom:10px">
+            <i data-lucide="search" style="width:18px;height:18px;color:var(--violet);flex-shrink:0"></i>
+            <input value="${escapeHtml(state.txQuery)}" oninput="temaCariTx(this.value)" placeholder="Cari transaksi..." style="background:none;border:none;outline:none;color:var(--text);font-size:19px;flex:1;min-width:0;font-weight:600">
+          </div>
+          <div style="display:flex;gap:4px;background:var(--surface-raised);border-radius:14px;padding:4px;margin-bottom:10px">
+            ${['Semua', 'Masuk', 'Keluar'].map(segBtn).join('')}
+          </div>
+          <div style="display:flex;gap:8px">
+            <select onchange="state.txPeriod=this.value;render()" style="${selStyle}" aria-label="Periode">
+              <option value="Semua" ${state.txPeriod === 'Semua' ? 'selected' : ''}>Semua Waktu</option>
+              ${months.map(ym => `<option value="${ym}" ${state.txPeriod === ym ? 'selected' : ''}>${temaNamaBulan(ym)}</option>`).join('')}
+            </select>
+            <select onchange="state.txAccount=this.value;render()" style="${selStyle}" aria-label="Akun">
+              <option value="Semua" ${state.txAccount === 'Semua' ? 'selected' : ''}>Semua Akun</option>
+              ${state.accounts.map(a => `<option value="${escapeHtml(a.name)}" ${state.txAccount === a.name ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div id="tx-list">${temaTxListHtml()}</div>
+      `;
+    }
+
+    // ---------- Anggaran: kartu kuota bulanan + daftar budget grup ----------
+    function renderPengaturanBudget() {
+      const { spendCurrent, spendPrev } = getMonthlySpends();
+      const gOf = {}; state.categories.forEach(c => { gOf[c.name] = c.group; });
+      const spentG = {};
+      Object.keys(spendCurrent).forEach(n => { const g = gOf[n] || 'LAINNYA'; spentG[g] = (spentG[g] || 0) + spendCurrent[n]; });
+      let totalBudget = 0, totalSpent = 0;
+      Object.keys(state.groupBudgets || {}).forEach(g => {
+        const b = Number(state.groupBudgets[g] || 0);
+        if (b > 0) { totalBudget += b; totalSpent += spentG[g] || 0; }
+      });
+      const now = new Date();
+      const hariTotal = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const sisaHari = Math.max(1, hariTotal - now.getDate() + 1);
+      const sisa = Math.max(0, totalBudget - totalSpent);
+      const pct = totalBudget > 0 ? Math.round(totalSpent / totalBudget * 100) : 0;
+      const over = totalBudget > 0 && totalSpent > totalBudget;
+      const bulan = now.toLocaleDateString('id-ID', { month: 'long' }).toUpperCase();
+
+      const kuota = totalBudget <= 0
+        ? `<div class="card" style="padding:20px;margin-bottom:20px;font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.5">Belum ada budget grup. Isi budget di tiap grup di bawah, lalu tekan ikon simpan.</div>`
+        : `<div class="card" style="padding:20px;margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--primary)"></span>KUOTA BULANAN • ${bulan}</span>
+              <span style="padding:3px 10px;border-radius:9999px;background:${over ? '#FCE8E6' : '#E6F4EA'};color:${over ? '#C5221F' : '#137333'};font-size:11px;font-weight:700">${sisaHari} hari tersisa</span>
+            </div>
+            <div class="display tabular" style="font-size:32px;font-weight:800;color:${over ? 'var(--coral)' : 'var(--text)'};line-height:1.15">${fmtHide(over ? totalSpent - totalBudget : sisa)}</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${over ? 'Melebihi' : 'Sisa'} dari total budget ${fmtHide(totalBudget)}</div>
+            <div style="height:8px;border-radius:999px;background:var(--surface-raised);margin:14px 0;overflow:hidden"><div style="width:${Math.min(100, pct)}%;height:100%;background:${over ? 'var(--coral)' : (pct >= 80 ? 'var(--amber)' : 'var(--primary)')};border-radius:999px"></div></div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;background:#F8FAFD;border-radius:14px;padding:12px">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:600">Terpakai (${pct}%)</div>
+                <div class="tabular" style="font-size:15px;font-weight:800;color:var(--text);margin-top:2px">${fmtHide(totalSpent)}</div>
+              </div>
+              <div style="flex:1;background:#F8FAFD;border-radius:14px;padding:12px">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:600">Rekomendasi aman</div>
+                <div class="tabular" style="font-size:15px;font-weight:800;color:var(--emerald);margin-top:2px">${over ? '-' : fmtHide(Math.round(sisa / sisaHari)) + '/hari'}</div>
+              </div>
+            </div>
+          </div>`;
+
+      return `
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;font-weight:500;line-height:1.5">Atur batas pengeluaran grup untuk bulan ini. Tekan ikon simpan setelah mengubah.</div>
+        ${kuota}
+        ${renderGroupBudgetGroups(spendCurrent, spendPrev, true)}
+      `;
+    }
+
+    // App bar langsung tampil (isi layar dirender oleh render() setelah data siap)
+    renderAppbar();
+    // ============================================================
+    // TAMBAHAN 1: header diturunkan + latar putih penuh (menutup "kabut" blur Safari di atas)
+    // Ubah --bar-drop untuk mengatur seberapa jauh header turun (px).
+    // ============================================================
+    (function () {
+      const st = document.createElement('style');
+      st.textContent = `
+        :root { --bar-drop: 16px; }
+        #appbar { padding-top: calc(env(safe-area-inset-top, 0px) + var(--bar-drop)); background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; }
+        #screen { padding-top: calc(80px + var(--bar-drop) + env(safe-area-inset-top, 0px)); }
+      `;
+      document.head.appendChild(st);
+    })();
+
+    // ============================================================
+    // TAMBAHAN 2: Aset Lancar di tab Dompet = tumpukan kartu debit yang bisa digeser
+    // - Geser ke bawah/kanan: kartu depan meluncur keluar dan hilang, kartu di belakangnya maju. Geser ke atas/kiri: kebalikannya.
+    // - Ketuk kartu yang mengintip = langsung ke kartu itu. Ketuk kartu depan = berikutnya.
+    // Hanya tampilan. Saldo tetap dari accountBalance(); tidak ada perubahan data/backend.
+    // ============================================================
+    const TEMA_KARTU = [
+      ['gopay', ['#00AED6', '#0A6FB5']],
+      ['e-money', ['#2E3191', '#1B1D6B']], ['emoney', ['#2E3191', '#1B1D6B']],
+      ['bca', ['#0066AE', '#00407A']],
+      ['bri', ['#1A73E8', '#0B57D0']],
+      ['rdn', ['#3C4043', '#16181B']], ['stockbit', ['#3C4043', '#16181B']],
+      ['tunai', ['#1E8E3E', '#0F5C28']], ['cash', ['#1E8E3E', '#0F5C28']]
+    ];
+    const TEMA_KARTU_H = 196;   // tinggi kartu (px)
+    const TEMA_KARTU_GAP = 28;  // tinggi pita kartu yang mengintip (px)
+    const TEMA_KARTU_EASE = 'transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease';
+
+    function temaKartuWarna(a) {
+      const n = String(a.name || '').toLowerCase();
+      const hit = TEMA_KARTU.find(r => n.includes(r[0]));
+      return hit ? hit[1] : ['#1A73E8', '#0B57D0'];
+    }
+    function temaKartuJenis(a) {
+      const n = String(a.name || '').toLowerCase();
+      if (a.type === 'E-money') return 'E-MONEY';
+      if (n.includes('tunai') || n.includes('cash')) return 'TUNAI';
+      if (n.includes('bri') || n.includes('bca')) return 'DEBIT';
+      return 'REKENING';
+    }
+    function temaKartuList() { return state.accounts.filter(a => a.type !== 'Kredit'); }
+
+    // Posisi kartu menurut urutannya dari depan (rel 0 = depan)
+    function temaKartuPos(rel, n) {
+      const peek = Math.min(n - 1, 2);
+      if (rel <= peek) {
+        return { t: `translate(0px,${(peek - rel) * TEMA_KARTU_GAP}px) scale(${1 - 0.04 * rel})`, o: 1, z: 10 - rel, main: rel === 0 ? 1 : 0, label: rel === 0 ? 0 : 1 };
+      }
+      return { t: 'translate(0px,0px) scale(0.85)', o: 0, z: 0, main: 0, label: 0 };
+    }
+
+    let _asetTimer = null, _asetPend = null;
+    function asetEl(i) { return document.querySelector('#aset-deck [data-i="' + i + '"]'); }
+    function asetApply(el, p) {
+      el.style.transform = p.t;
+      el.style.opacity = p.o;
+      el.style.zIndex = p.z;
+      el.style.pointerEvents = p.o ? 'auto' : 'none';
+      const m = el.querySelector('.aset-main'); if (m) m.style.opacity = p.main;
+      const l = el.querySelector('.aset-peek'); if (l) l.style.opacity = p.label;
+    }
+    // Susun ulang semua kartu menurut kartu depan sekarang (skipI = kartu yang sedang animasi keluar)
+    function asetLayout(skipI) {
+      const deck = document.getElementById('aset-deck');
+      if (!deck) return;
+      const n = temaKartuList().length;
+      const f = window._asetFront || 0;
+      deck.querySelectorAll('[data-i]').forEach(el => {
+        const i = Number(el.getAttribute('data-i'));
+        if (i === skipI) return;
+        el.style.transition = TEMA_KARTU_EASE;
+        asetApply(el, temaKartuPos((i - f + n) % n, n));
+      });
+      document.querySelectorAll('.aset-dot').forEach(d => {
+        const on = Number(d.getAttribute('data-i')) === f;
+        d.style.width = (on ? 18 : 6) + 'px';
+        d.style.background = on ? 'var(--primary)' : 'var(--border)';
+      });
+    }
+    // Selesaikan animasi keluar yang masih berjalan (dipanggil sebelum gerakan berikutnya)
+    function asetFlush() {
+      if (_asetTimer) { clearTimeout(_asetTimer); _asetTimer = null; }
+      if (_asetPend) { const fn = _asetPend; _asetPend = null; fn(); }
+    }
+    // dir > 0: kartu depan meluncur ke bawah dan hilang, kartu di belakangnya maju.
+    // dir < 0: kebalikannya, kartu sebelumnya muncul dari bawah ke depan.
+    function asetGo(newF, dir) {
+      const n = temaKartuList().length;
+      if (n < 2 || !document.getElementById('aset-deck')) return;
+      asetFlush();
+      const old = window._asetFront || 0;
+      newF = ((newF % n) + n) % n;
+      if (newF === old) { asetLayout(); return; }
+      const off = Math.min(n - 1, 2) * TEMA_KARTU_GAP + TEMA_KARTU_H;
+      window._asetFront = newF;
+      if (dir > 0) {
+        const out = asetEl(old);
+        if (out) {
+          out.style.transition = 'transform .42s cubic-bezier(.4,0,.9,.6), opacity .3s ease .05s';
+          out.style.transform = `translate(0px,${off}px) scale(1)`;
+          out.style.opacity = 0;
+          out.style.zIndex = 20;
+          out.style.pointerEvents = 'none';
+        }
+        asetLayout(old);
+        // Setelah hilang, kartu itu dipindah diam-diam ke urutan paling belakang lalu dimunculkan perlahan
+        _asetPend = function () {
+          if (!out) return;
+          const p = temaKartuPos((old - window._asetFront + n) % n, n);
+          out.style.transition = 'none';
+          asetApply(out, Object.assign({}, p, { o: 0 }));
+          void out.offsetWidth;
+          out.style.transition = TEMA_KARTU_EASE;
+          out.style.opacity = p.o;
+          out.style.pointerEvents = p.o ? 'auto' : 'none';
+        };
+        _asetTimer = setTimeout(asetFlush, 430);
+      } else {
+        const inc = asetEl(newF);
+        if (inc) {
+          inc.style.transition = 'none';
+          inc.style.transform = `translate(0px,${off}px) scale(1)`;
+          inc.style.opacity = 0;
+          inc.style.zIndex = 20;
+          void inc.offsetWidth;
+        }
+        asetLayout();
+      }
+    }
+    function asetSet(i) {   // lompat langsung (titik indikator / ketuk kartu yang mengintip)
+      const n = temaKartuList().length;
+      if (n < 2) return;
+      const f = window._asetFront || 0;
+      i = ((i % n) + n) % n;
+      if (i === f) return;
+      asetGo(i, i === (f - 1 + n) % n ? -1 : 1);
+    }
+
+    // ---- Gestur geser (pointer events; berfungsi untuk sentuhan dan mouse) ----
+    let _asetDrag = null;
+    function asetDown(e) {
+      asetFlush();
+      const hit = e.target.closest ? e.target.closest('[data-i]') : null;
+      _asetDrag = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false, i: hit ? Number(hit.getAttribute('data-i')) : -1 };
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
+    }
+    function asetMove(e) {
+      const d = _asetDrag;
+      if (!d) return;
+      const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (!d.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      d.moved = true;
+      const n = temaKartuList().length;
+      if (n < 2) return;
+      const front = asetEl(window._asetFront || 0);
+      if (!front) return;
+      const base = Math.min(n - 1, 2) * TEMA_KARTU_GAP;
+      front.style.transition = 'none';
+      front.style.transform = `translate(${dx * 0.6}px,${base + dy * 0.6}px) scale(1)`;
+    }
+    function asetUp(e) {
+      const d = _asetDrag;
+      _asetDrag = null;
+      if (!d) return;
+      const n = temaKartuList().length;
+      const f = window._asetFront || 0;
+      if (!d.moved) {                       // ketukan biasa
+        if (n < 2) return;
+        asetSet(d.i >= 0 && d.i !== f ? d.i : f + 1);
+        return;
+      }
+      const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      const v = Math.abs(dy) >= Math.abs(dx) ? dy : dx;   // ke bawah/kanan = maju, ke atas/kiri = mundur
+      const cepat = Date.now() - d.t < 300 && Math.abs(v) >= 24;
+      if (n > 1 && (Math.abs(v) >= 50 || cepat)) asetGo(v > 0 ? f + 1 : f - 1, v > 0 ? 1 : -1);
+      else asetLayout();                    // kurang jauh: kembali ke posisi semula
+    }
+    function asetCancel() { _asetDrag = null; asetLayout(); }
+
+    function temaKartuHtml(a, i, n, f) {
+      const w = temaKartuWarna(a);
+      const p = temaKartuPos((i - f + n) % n, n);
+      const adaChip = temaKartuJenis(a) !== 'TUNAI';
+      const chip = adaChip ? `<div style="width:44px;height:32px;border-radius:8px;background:linear-gradient(135deg,#FEF7E0,#F9AB00 55%,#B06000);border:1px solid rgba(176,96,0,0.35);position:relative;overflow:hidden">
+          <div style="position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(176,96,0,0.4)"></div>
+          <div style="position:absolute;top:0;bottom:0;left:33%;width:1px;background:rgba(176,96,0,0.4)"></div>
+          <div style="position:absolute;top:0;bottom:0;right:33%;width:1px;background:rgba(176,96,0,0.4)"></div>
+        </div>` : '<div style="height:32px"></div>';
+      return `<div data-i="${i}" style="position:absolute;left:0;right:0;top:0;height:${TEMA_KARTU_H}px;transform-origin:50% 0;transform:${p.t};opacity:${p.o};z-index:${p.z};pointer-events:${p.o ? 'auto' : 'none'};transition:${TEMA_KARTU_EASE};will-change:transform;border-radius:28px;overflow:hidden;color:#fff;cursor:pointer;background:linear-gradient(135deg,${w[0]} 0%,${w[0]} 35%,${w[1]} 100%);box-shadow:0 14px 28px -10px ${w[1]}99;border:1px solid rgba(255,255,255,0.25)">
+        <div style="position:absolute;right:-48px;bottom:-48px;width:176px;height:176px;border-radius:50%;background:rgba(255,255,255,0.14)"></div>
+        <div style="position:absolute;left:-48px;top:-48px;width:144px;height:144px;border-radius:50%;background:rgba(147,197,253,0.28)"></div>
+        <div class="aset-peek" style="position:absolute;left:18px;right:18px;top:7px;display:flex;justify-content:space-between;gap:10px;opacity:${p.label};transition:opacity .3s ease">
+          <span style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span>
+          <span class="tabular" style="font-size:11px;font-weight:700;white-space:nowrap;opacity:0.9">${fmtHide(accountBalance(a.name))}</span>
+        </div>
+        <div class="aset-main" style="position:relative;z-index:1;height:100%;padding:20px;display:flex;flex-direction:column;justify-content:space-between;opacity:${p.main};transition:opacity .3s ease">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              <div style="background:#fff;border-radius:12px;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${accIcon(a.name, i, a.type, 30)}</div>
+              <span style="font-size:16px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;opacity:0.95">
+              <i data-lucide="wifi" style="width:18px;height:18px;transform:rotate(90deg)"></i>
+              <span style="font-size:11px;font-weight:800;letter-spacing:0.08em">${temaKartuJenis(a)}</span>
+            </div>
+          </div>
+          ${chip}
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;opacity:0.75">SALDO</div>
+            <div class="display tabular" style="font-size:28px;font-weight:800;letter-spacing:-0.02em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(accountBalance(a.name))}</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function temaKartuAset() {
+      const list = temaKartuList();
+      const n = list.length;
+      if (n === 0) return '';
+      let f = window._asetFront || 0;
+      if (f >= n) f = 0;
+      window._asetFront = f;
+      const tinggi = Math.min(n - 1, 2) * TEMA_KARTU_GAP + TEMA_KARTU_H;
+      const dots = n > 1 ? `<div style="display:flex;justify-content:center;align-items:center;margin-top:10px">
+          ${list.map((x, i) => `<button onclick="asetSet(${i})" aria-label="${escapeHtml(x.name)}" style="background:none;border:none;padding:8px 4px;cursor:pointer"><span class="aset-dot" data-i="${i}" style="display:block;height:6px;width:${i === f ? 18 : 6}px;border-radius:999px;background:${i === f ? 'var(--primary)' : 'var(--border)'};transition:width .3s ease,background .3s ease"></span></button>`).join('')}
+        </div>
+        <div style="text-align:center;font-size:11.5px;color:var(--text-muted);font-weight:600;margin-top:-2px">Geser kartu untuk berganti akun</div>` : '';
+      return `<div style="margin-bottom:24px">
+        <div id="aset-deck" onpointerdown="asetDown(event)" onpointermove="asetMove(event)" onpointerup="asetUp(event)" onpointercancel="asetCancel()" style="position:relative;height:${tinggi}px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none">
+          ${list.map((a, i) => temaKartuHtml(a, i, n, f)).join('')}
+        </div>
+        ${dots}
+      </div>`;
+    }
+
+    // Ganti baris geser "Aset Lancar" bawaan dengan tumpukan kartu (blok div dicari dengan hitung kurung)
+    (function () {
+      const renderAsetAsli = renderAset;
+      renderAset = function () {
+        const html = renderAsetAsli();
+        const start = html.indexOf('<div class="horizontal-scroll"');
+        if (start < 0) return html;
+        const re = /<div\b|<\/div>/g;
+        re.lastIndex = start;
+        let depth = 0, end = -1, m;
+        while ((m = re.exec(html))) {
+          if (m[0] === '</div>') { depth--; if (depth === 0) { end = m.index + 6; break; } }
+          else depth++;
+        }
+        if (end < 0) return html;
+        return html.slice(0, start) + temaKartuAset() + html.slice(end);
+      };
+    })();
+</script>
