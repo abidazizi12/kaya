@@ -28,6 +28,7 @@
     function logoHtml_(key, s) {
       const L = KAYA_LOGOS[key];
       if (!L) return '';
+        s = Math.round(s * UI_SCALE);
       const base = 'flex-shrink:0;display:block;';
       if (L.shape === 'app') return `<img src="${L.src}" alt="" style="${base}width:${s}px;height:${s}px;border-radius:24%;object-fit:cover">`;
       if (L.shape === 'card') return `<img src="${L.src}" alt="" style="${base}width:${Math.round(s * L.ratio)}px;height:${s}px;border-radius:${Math.max(4, Math.round(s * 0.14))}px;object-fit:cover">`;
