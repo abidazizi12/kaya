@@ -1,0 +1,159 @@
+<script>
+    /**
+     * KAYA - SPLIT KATEGORI TRANSAKSI (hanya pengeluaran)
+     * Tombol "Pisah Kategori" muncul di modal Edit Transaksi. Memakai nominal yang TERSIMPAN
+     * (perubahan form yang belum disimpan tidak ikut). Bagian terakhir otomatis = sisa nominal.
+     * Wajib di-include SETELAH JS_Tema. Backend: splitTransaction(id, parts) di API.gs.
+     */
+    const SPLIT_TOLAK = ['Transfer Antar Rekening', 'Pembayaran CC', 'Hutang Piutang', 'Cicilan', 'Refund'];
+
+    function splitKategori() {
+      return state.categories
+        .filter(c => c.group !== 'PENGHASILAN' && !SPLIT_TOLAK.includes(c.name))
+        .map(c => c.name);
+    }
+
+    // Sisipkan tombol "Pisah Kategori" tepat di atas tombol simpan pada modal edit
+    (function () {
+      const renderEditAsli = renderEditTx;
+      renderEditTx = function () {
+        renderEditAsli();
+        const e = window._edit;
+        if (!e || e.type !== 'Keluar' || SPLIT_TOLAK.includes(e.category)) return;
+        const t = state.transactions.find(x => x.id === e.id);
+        if (!t || t.type !== 'Keluar') return;
+        const simpan = document.querySelector('#sheet button[onclick="submitEditTx()"]');
+        if (!simpan) return;
+        simpan.insertAdjacentHTML('beforebegin',
+          `<button onclick="openSplitTx()" style="width:100%;margin-top:16px;background:var(--violet-soft);border:none;border-radius:9999px;padding:14px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="split" style="width:18px;height:18px"></i> Pisah Kategori</button>`);
+        lucide.createIcons();
+      };
+    })();
+
+    function openSplitTx() {
+      const e = window._edit;
+      const t = e && state.transactions.find(x => x.id === e.id);
+      if (!t) return;
+      const list = splitKategori();
+      const total = Math.round(Number(t.amount));
+      const k1 = list.includes(t.category) ? t.category : (list[0] || 'Lainnya');
+      const k2 = list.find(n => n !== k1) || k1;
+      window._split = { id: t.id, total: total, desc: t.desc, parts: [{ category: k1, amountRaw: '' }, { category: k2, amountRaw: '' }] };
+      renderSplit();
+    }
+
+    function splitNum(raw) { return parseInt(String(raw || '').replace(/[^0-9]/g, ''), 10) || 0; }
+    function splitFmt(n) { return Math.round(n).toLocaleString('id-ID').replace(/,/g, '.'); }
+
+    function renderSplit() {
+      const s = window._split;
+      const list = splitKategori();
+      const n = s.parts.length;
+      const rows = s.parts.map((p, i) => {
+        const opts = list.map(c => `<option value="${escapeHtml(c)}" ${c === p.category ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+        const terakhir = i === n - 1;
+        return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <select class="field-input" style="flex:1.1;min-width:0;padding:12px 10px" onchange="window._split.parts[${i}].category=this.value">${opts}</select>
+          <input id="split-amt-${i}" class="field-input" style="flex:1;min-width:0;padding:12px 10px;text-align:right;${terakhir ? 'background:var(--surface-raised);color:var(--text-muted)' : ''}" inputmode="numeric" placeholder="0" ${terakhir ? 'readonly' : ''} value="${terakhir ? '' : p.amountRaw}" ${terakhir ? '' : `oninput="formatNumberInput(this);window._split.parts[${i}].amountRaw=this.value;splitUpdate()"`}>
+          ${n > 2 ? `<button onclick="splitRemove(${i})" aria-label="Hapus bagian" style="flex-shrink:0;background:var(--surface-raised);border:none;border-radius:12px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:16px;height:16px;color:var(--text-muted)"></i></button>` : '<span style="width:0"></span>'}
+        </div>`;
+      }).join('');
+
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Pisah Kategori</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+        </div>
+        <div class="card" style="padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:15px;font-weight:700;color:var(--text);word-break:break-word">${escapeHtml(s.desc)}</div>
+          <div class="tabular" style="font-size:14px;font-weight:700;color:var(--text-muted);margin-top:2px">Total ${fmtRp(s.total)}</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);font-weight:500;margin-bottom:12px;line-height:1.45">Isi nominal tiap bagian. Bagian terakhir otomatis terisi sisanya.</div>
+        ${rows}
+        <button onclick="splitAdd()" style="width:100%;background:none;border:1.5px dashed var(--violet);border-radius:14px;padding:11px 0;color:var(--violet);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px"><i data-lucide="plus" style="width:14px;height:14px;vertical-align:-2px"></i> Tambah bagian</button>
+        <div id="split-info" class="tabular" style="font-size:13.5px;font-weight:700;margin:10px 2px 0"></div>
+        <div style="display:flex;gap:10px;margin-top:18px">
+          <button onclick="openEditTx('${escapeHtml(s.id)}')" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:15px 0;color:var(--text);font-size:15px;font-weight:700;cursor:pointer">Kembali</button>
+          <button id="split-save" onclick="submitSplit()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:15px 0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Simpan</button>
+        </div>
+      `);
+      splitUpdate();
+    }
+
+    // Hitung ulang bagian terakhir + status tombol tanpa render ulang (supaya kursor tidak hilang)
+    function splitUpdate() {
+      const s = window._split;
+      if (!s) return;
+      const n = s.parts.length;
+      let jumlah = 0, kosong = false;
+      for (let i = 0; i < n - 1; i++) {
+        const v = splitNum(s.parts[i].amountRaw);
+        if (v <= 0) kosong = true;
+        jumlah += v;
+      }
+      const sisa = s.total - jumlah;
+      const last = document.getElementById('split-amt-' + (n - 1));
+      if (last) last.value = sisa > 0 ? splitFmt(sisa) : '0';
+      const ok = !kosong && sisa > 0;
+      const info = document.getElementById('split-info');
+      if (info) {
+        info.style.color = sisa < 0 ? 'var(--coral)' : 'var(--text-muted)';
+        info.textContent = sisa < 0 ? 'Total bagian melebihi nominal (lebih ' + fmtRp(-sisa) + ')'
+          : (kosong ? 'Isi nominal semua bagian di atas' : (sisa === 0 ? 'Bagian terakhir tidak boleh 0' : 'Sisa untuk bagian terakhir: ' + fmtRp(sisa)));
+      }
+      const btn = document.getElementById('split-save');
+      if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.45'; }
+    }
+
+    function splitAdd() {
+      const s = window._split;
+      if (s.parts.length >= 8) { showToast('Maksimal 8 bagian'); return; }
+      const list = splitKategori();
+      s.parts[s.parts.length - 1].amountRaw = '';   // bagian terakhir lama jadi bisa diisi
+      s.parts.push({ category: list[0] || 'Lainnya', amountRaw: '' });
+      renderSplit();
+    }
+    function splitRemove(i) {
+      const s = window._split;
+      if (s.parts.length <= 2) return;
+      s.parts.splice(i, 1);
+      renderSplit();
+    }
+
+    function submitSplit() {
+      const s = window._split;
+      const n = s.parts.length;
+      const parts = [];
+      let jumlah = 0;
+      for (let i = 0; i < n - 1; i++) {
+        const v = splitNum(s.parts[i].amountRaw);
+        if (v <= 0) return;
+        jumlah += v;
+        parts.push({ category: s.parts[i].category, amount: v });
+      }
+      const sisa = s.total - jumlah;
+      if (sisa <= 0) return;
+      parts.push({ category: s.parts[n - 1].category, amount: sisa });
+
+      // Optimistic UI: baris asli jadi bagian pertama, sisanya baris sementara
+      const t = state.transactions.find(x => x.id === s.id);
+      if (!t) return;
+      const baseDesc = t.desc;
+      t.desc = baseDesc + ' (' + parts[0].category + ')';
+      t.category = parts[0].category;
+      t.amount = parts[0].amount;
+      for (let k = 1; k < parts.length; k++) {
+        state.transactions.unshift({
+          id: 'temp-split-' + Date.now() + '-' + k, date: t.date, desc: baseDesc + ' (' + parts[k].category + ')',
+          category: parts[k].category, type: 'Keluar', amount: parts[k].amount, account: t.account
+        });
+      }
+      const id = s.id;
+      window._split = null;
+      closeModal(); render(); showToast('Transaksi dipisah!');
+      google.script.run
+        .withSuccessHandler(r => { if (!r || !r.success) showToast((r && r.error) || 'Gagal memisah transaksi'); loadData(); })
+        .withFailureHandler(() => { showToast('Gagal memisah transaksi'); loadData(); })
+        .splitTransaction(id, parts);
+    }
+</script>
