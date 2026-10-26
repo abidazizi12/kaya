@@ -27,7 +27,7 @@
         const simpan = document.querySelector('#sheet button[onclick="submitEditTx()"]');
         if (!simpan) return;
         simpan.insertAdjacentHTML('beforebegin',
-          `<button onclick="openTitip()" style="width:100%;margin-top:12px;background:var(--violet-soft);border:none;border-radius:9999px;padding:14px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="users" style="width:18px;height:18px"></i> Titipan / Split Bill</button>`);
+          `<button onclick="openTitip()" style="width:100%;margin-top:10.2px;background:var(--violet-soft);border:none;border-radius:9999px;padding:11.9px 0;color:var(--violet);font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px"><i data-lucide="users" style="width:15.3px;height:15.3px"></i> Titipan / Split Bill</button>`);
         lucide.createIcons();
       };
     })();
@@ -147,25 +147,25 @@
       const nama = [...new Set((state.hutang || []).filter(h => h.type === 'Piutang').map(h => h.name))];
       const meta = catMeta(s.category);
 
-      const switchHtml = (on, handler) => `<label style="position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0;cursor:pointer"><input type="checkbox" onchange="${handler}" ${on ? 'checked' : ''} style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0;cursor:pointer"><span style="position:absolute;inset:0;background:${on ? 'var(--violet)' : 'var(--border)'};border-radius:28px;transition:0.15s;pointer-events:none"><span style="position:absolute;height:22px;width:22px;left:${on ? '25px' : '3px'};bottom:3px;background:white;border-radius:50%;transition:0.15s;box-shadow:0 2px 4px rgba(0,0,0,0.1)"></span></span></label>`;
+      const switchHtml = (on, handler) => `<label style="position:relative;display:inline-block;width:42.5px;height:23.8px;flex-shrink:0;cursor:pointer"><input type="checkbox" onchange="${handler}" ${on ? 'checked' : ''} style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0;cursor:pointer"><span style="position:absolute;inset:0;background:${on ? 'var(--violet)' : 'var(--border)'};border-radius:23.8px;transition:0.15s;pointer-events:none"><span style="position:absolute;height:18.7px;width:18.7px;left:${on ? '21.2px' : '2.5px'};bottom:2.5px;background:white;border-radius:50%;transition:0.15s;box-shadow:0 2px 3.4px rgba(0,0,0,0.1)"></span></span></label>`;
 
       const rows = s.friends.map((f, i) => {
         const chips = f.paid
-          ? `<label class="field-label" style="margin-top:14px">Dibayar balik ke akun</label>
-             <div style="display:flex;gap:10px;flex-wrap:wrap">${akun.map((a, j) => `<button class="chip ${f.payAccount === a.name ? 'active' : ''}" onclick="titipSetPay(${i},${j})">${escapeHtml(a.name)}</button>`).join('')}</div>`
+          ? `<label class="field-label" style="margin-top:11.9px">Dibayar balik ke akun</label>
+             <div style="display:flex;gap:8.5px;flex-wrap:wrap">${akun.map((a, j) => `<button class="chip ${f.payAccount === a.name ? 'active' : ''}" onclick="titipSetPay(${i},${j})">${escapeHtml(a.name)}</button>`).join('')}</div>`
           : '';
-        return `<div class="card" style="padding:16px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        return `<div class="card" style="padding:13.6px;margin-bottom:10.2px">
+          <div style="display:flex;align-items:center;gap:8.5px;margin-bottom:10.2px">
             ${iconBubble('user', '#1A73E8', 36)}
-            <div style="flex:1;font-size:15px;font-weight:700;color:var(--text)">Teman ${i + 1}</div>
-            ${s.friends.length > 1 ? `<button onclick="titipHapus(${i})" aria-label="Hapus teman" style="background:var(--surface-raised);border:none;border-radius:12px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:16px;height:16px;color:var(--text-muted)"></i></button>` : ''}
+            <div style="flex:1;font-size:12.8px;font-weight:700;color:var(--text)">Teman ${i + 1}</div>
+            ${s.friends.length > 1 ? `<button onclick="titipHapus(${i})" aria-label="Hapus teman" style="background:var(--surface-raised);border:none;border-radius:10.2px;width:30.6px;height:30.6px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:13.6px;height:13.6px;color:var(--text-muted)"></i></button>` : ''}
           </div>
           <label class="field-label" for="titip-name-${i}" style="margin-top:0">Nama</label>
           <input id="titip-name-${i}" list="titip-names" class="field-input" placeholder="Nama teman" value="${escapeHtml(f.name)}" oninput="window._titip.friends[${i}].name=this.value;titipUpdate()">
           <label class="field-label" for="titip-amt-${i}">Bagian teman (Rp)</label>
           <input id="titip-amt-${i}" class="field-input" inputmode="numeric" placeholder="0" value="${f.amountRaw}" oninput="formatNumberInput(this);window._titip.friends[${i}].amountRaw=this.value;titipUpdate()">
-          <div style="display:flex;align-items:center;gap:12px;margin-top:16px">
-            <div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text)">Sudah dibayar balik</div><div style="font-size:12.5px;color:var(--text-muted);font-weight:500">Misal diganti tunai. Piutang langsung lunas.</div></div>
+          <div style="display:flex;align-items:center;gap:10.2px;margin-top:13.6px">
+            <div style="flex:1"><div style="font-size:11.9px;font-weight:700;color:var(--text)">Sudah dibayar balik</div><div style="font-size:10.6px;color:var(--text-muted);font-weight:500">Misal diganti tunai. Piutang langsung lunas.</div></div>
             ${switchHtml(f.paid, `titipTogglePaid(${i},this.checked)`)}
           </div>
           ${chips}
@@ -174,37 +174,37 @@
 
       return `
         <datalist id="titip-names">${nama.map(n => `<option value="${escapeHtml(n)}"></option>`).join('')}</datalist>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <button onclick="titipKembali()" aria-label="Kembali" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
-          <div style="font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.4">Pisahkan bagian teman dari pengeluaran ini.</div>
+        <div style="display:flex;align-items:center;gap:10.2px;margin-bottom:13.6px">
+          <button onclick="titipKembali()" aria-label="Kembali" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:35.7px;height:35.7px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
+          <div style="font-size:11.9px;color:var(--text-muted);font-weight:500;line-height:1.4">Pisahkan bagian teman dari pengeluaran ini.</div>
         </div>
 
-        <div class="card" style="padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+        <div class="card" style="padding:13.6px;margin-bottom:13.6px;display:flex;align-items:center;gap:11.9px">
           ${iconBubble(meta.icon, meta.color, 46)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:700;color:var(--text);word-break:break-word">${escapeHtml(s.desc)}</div>
-            <div style="font-size:13px;color:var(--text-muted);font-weight:500;margin-top:2px">${escapeHtml(s.category)} · ${escapeHtml(s.account)} · ${fmtDateLabel(s.date)}</div>
+            <div style="font-size:12.8px;font-weight:700;color:var(--text);word-break:break-word">${escapeHtml(s.desc)}</div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:500;margin-top:2px">${escapeHtml(s.category)} · ${escapeHtml(s.account)} · ${fmtDateLabel(s.date)}</div>
           </div>
-          <div class="tabular" style="font-size:15px;font-weight:800;color:var(--text);flex-shrink:0">${fmtRp(s.total)}</div>
+          <div class="tabular" style="font-size:12.8px;font-weight:800;color:var(--text);flex-shrink:0">${fmtRp(s.total)}</div>
         </div>
 
-        <div style="display:flex;gap:10px;margin-bottom:16px">
-          <button onclick="titipBagi(true)" style="flex:1;background:var(--violet-soft);border:none;border-radius:14px;padding:12px 6px;color:var(--violet);font-size:13.5px;font-weight:700;cursor:pointer">Bagi rata (aku ikut)</button>
-          <button onclick="titipBagi(false)" style="flex:1;background:var(--surface-raised);border:none;border-radius:14px;padding:12px 6px;color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer">Semua titipan</button>
+        <div style="display:flex;gap:8.5px;margin-bottom:13.6px">
+          <button onclick="titipBagi(true)" style="flex:1;background:var(--violet-soft);border:none;border-radius:11.9px;padding:10.2px 5.1px;color:var(--violet);font-size:11.5px;font-weight:700;cursor:pointer">Bagi rata (aku ikut)</button>
+          <button onclick="titipBagi(false)" style="flex:1;background:var(--surface-raised);border:none;border-radius:11.9px;padding:10.2px 5.1px;color:var(--text);font-size:11.5px;font-weight:700;cursor:pointer">Semua titipan</button>
         </div>
 
         ${rows}
 
-        <button onclick="titipTambah()" style="width:100%;background:none;border:1.5px dashed var(--violet);border-radius:14px;padding:12px 0;color:var(--violet);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px"><i data-lucide="plus" style="width:14px;height:14px;vertical-align:-2px"></i> Tambah teman</button>
+        <button onclick="titipTambah()" style="width:100%;background:none;border:1.5px dashed var(--violet);border-radius:11.9px;padding:10.2px 0;color:var(--violet);font-size:11.9px;font-weight:700;cursor:pointer;margin-bottom:13.6px"><i data-lucide="plus" style="width:11.9px;height:11.9px;vertical-align:-2px"></i> Tambah teman</button>
 
-        <div class="card" style="padding:16px 18px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Total transaksi</span><span class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtRp(s.total)}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Bagian teman</span><span id="titip-sum" class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtRp(0)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px dashed var(--border)"><span style="font-size:14px;color:var(--text);font-weight:700">Bagianku</span><span id="titip-own" class="tabular" style="font-size:15px;font-weight:800;color:var(--emerald)">${fmtRp(s.total)}</span></div>
-          <div id="titip-info" style="font-size:13px;font-weight:600;line-height:1.45;margin-top:12px"></div>
+        <div class="card" style="padding:13.6px 15.3px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6.8px"><span style="font-size:11.9px;color:var(--text-muted);font-weight:600">Total transaksi</span><span class="tabular" style="font-size:11.9px;font-weight:800;color:var(--text)">${fmtRp(s.total)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6.8px"><span style="font-size:11.9px;color:var(--text-muted);font-weight:600">Bagian teman</span><span id="titip-sum" class="tabular" style="font-size:11.9px;font-weight:800;color:var(--text)">${fmtRp(0)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding-top:6.8px;border-top:1px dashed var(--border)"><span style="font-size:11.9px;color:var(--text);font-weight:700">Bagianku</span><span id="titip-own" class="tabular" style="font-size:12.8px;font-weight:800;color:var(--emerald)">${fmtRp(s.total)}</span></div>
+          <div id="titip-info" style="font-size:11px;font-weight:600;line-height:1.45;margin-top:10.2px"></div>
         </div>
 
-        <button id="titip-save" class="btn-primary" onclick="submitTitip()"><i data-lucide="check" style="width:18px;height:18px"></i> Simpan</button>
+        <button id="titip-save" class="btn-primary" onclick="submitTitip()"><i data-lucide="check" style="width:15.3px;height:15.3px"></i> Simpan</button>
       `;
     }
 

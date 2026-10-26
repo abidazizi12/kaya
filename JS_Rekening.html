@@ -114,44 +114,44 @@
            <input id="rek-no" class="field-input" inputmode="numeric" placeholder="Nomor rekening / nomor akun" value="${escapeHtml(a.noRek || '')}">
            <label class="field-label" for="rek-an">Atas nama</label>
            <input id="rek-an" class="field-input" placeholder="Nama pemilik rekening" value="${escapeHtml(a.atasNama || '')}">
-           <div style="display:flex;gap:10px;margin-top:16px">
-             <button onclick="rekEdit(false)" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:14px 0;color:var(--text);font-size:15px;font-weight:700;cursor:pointer">Batal</button>
-             <button onclick="rekSimpan()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:14px 0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Simpan</button>
+           <div style="display:flex;gap:8.5px;margin-top:13.6px">
+             <button onclick="rekEdit(false)" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:11.9px 0;color:var(--text);font-size:12.8px;font-weight:700;cursor:pointer">Batal</button>
+             <button onclick="rekSimpan()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:11.9px 0;color:#fff;font-size:12.8px;font-weight:700;cursor:pointer">Simpan</button>
            </div>`
         : (a.noRek
-          ? `<div style="font-size:12px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">NO REKENING ${escapeHtml(a.name).toUpperCase()}</div>
-             <div class="tabular" style="font-size:22px;font-weight:800;color:var(--text);margin-top:4px;word-break:break-all">${escapeHtml(a.noRek)}</div>
-             <div style="font-size:14px;color:var(--text-muted);font-weight:600;margin-top:2px">${a.atasNama ? 'A/n ' + escapeHtml(a.atasNama) : 'Atas nama belum diisi'}</div>
-             <div style="display:flex;gap:10px;margin-top:14px">
-               <button onclick="rekSalin()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:13px 0;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="copy" style="width:18px;height:18px"></i> Salin</button>
-               <button onclick="rekEdit(true)" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:13px 0;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="pencil" style="width:16px;height:16px"></i> Ubah</button>
+          ? `<div style="font-size:10.2px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">NO REKENING ${escapeHtml(a.name).toUpperCase()}</div>
+             <div class="tabular" style="font-size:18.7px;font-weight:800;color:var(--text);margin-top:3.4px;word-break:break-all">${escapeHtml(a.noRek)}</div>
+             <div style="font-size:11.9px;color:var(--text-muted);font-weight:600;margin-top:2px">${a.atasNama ? 'A/n ' + escapeHtml(a.atasNama) : 'Atas nama belum diisi'}</div>
+             <div style="display:flex;gap:8.5px;margin-top:11.9px">
+               <button onclick="rekSalin()" style="flex:1.4;background:var(--primary);border:none;border-radius:9999px;padding:11px 0;color:#fff;font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px"><i data-lucide="copy" style="width:15.3px;height:15.3px"></i> Salin</button>
+               <button onclick="rekEdit(true)" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:11px 0;color:var(--text);font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px"><i data-lucide="pencil" style="width:13.6px;height:13.6px"></i> Ubah</button>
              </div>`
-          : `<div style="font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.5">Nomor rekening belum diisi.</div>
-             <button onclick="rekEdit(true)" style="width:100%;margin-top:12px;background:var(--violet-soft);border:none;border-radius:9999px;padding:13px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="plus" style="width:16px;height:16px"></i> Isi nomor rekening</button>`);
+          : `<div style="font-size:11.9px;color:var(--text-muted);font-weight:500;line-height:1.5">Nomor rekening belum diisi.</div>
+             <button onclick="rekEdit(true)" style="width:100%;margin-top:10.2px;background:var(--violet-soft);border:none;border-radius:9999px;padding:11px 0;color:var(--violet);font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px"><i data-lucide="plus" style="width:13.6px;height:13.6px"></i> Isi nomor rekening</button>`);
 
       const daftar = tampil.length === 0
-        ? '<div style="text-align:center;color:var(--text-muted);font-size:14px;padding:22px 0;font-weight:500">Tidak ada transaksi dalam 30 hari terakhir.</div>'
+        ? '<div style="text-align:center;color:var(--text-muted);font-size:11.9px;padding:18.7px 0;font-weight:500">Tidak ada transaksi dalam 30 hari terakhir.</div>'
         : tampil.map((t, i) => `<div style="${i > 0 ? 'border-top:1px dashed var(--border);' : ''}">
-              <div style="font-size:11.5px;color:var(--text-muted);font-weight:700;padding-top:8px">${fmtDateLabel(t.date)}</div>${txRow(t, true)}</div>`).join('');
+              <div style="font-size:9.8px;color:var(--text-muted);font-weight:700;padding-top:6.8px">${fmtDateLabel(t.date)}</div>${txRow(t, true)}</div>`).join('');
 
       // Tombol sinkron eChis: hanya untuk akun bertipe E-money
       const sinkron = a.type === 'E-money'
-        ? `<button onclick="rekSinkron()" style="width:100%;margin-bottom:16px;background:var(--violet-soft);border:none;border-radius:9999px;padding:14px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="file-spreadsheet" style="width:18px;height:18px"></i> Sinkron saldo E-Money (file eChis)</button>`
+        ? `<button onclick="rekSinkron()" style="width:100%;margin-bottom:13.6px;background:var(--violet-soft);border:none;border-radius:9999px;padding:11.9px 0;color:var(--violet);font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px"><i data-lucide="file-spreadsheet" style="width:15.3px;height:15.3px"></i> Sinkron saldo E-Money (file eChis)</button>`
         : '';
 
       openOverlay(`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <div style="display:flex;align-items:center;gap:12px;min-width:0">${accIcon(a.name, idx, a.type, 40)}<span class="display" style="font-weight:800;font-size:22px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span></div>
-          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13.6px">
+          <div style="display:flex;align-items:center;gap:10.2px;min-width:0">${accIcon(a.name, idx, a.type, 40)}<span class="display" style="font-weight:800;font-size:18.7px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span></div>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><i data-lucide="x" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
         </div>
-        <div class="card" style="padding:16px 18px;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">SALDO</div>
-          <div class="display tabular" style="font-size:28px;font-weight:800;color:var(--text);margin-top:2px">${fmtHide(accountBalance(a.name))}</div>
+        <div class="card" style="padding:13.6px 15.3px;margin-bottom:10.2px">
+          <div style="font-size:10.2px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">SALDO</div>
+          <div class="display tabular" style="font-size:23.8px;font-weight:800;color:var(--text);margin-top:2px">${fmtHide(accountBalance(a.name))}</div>
         </div>
-        <div class="card" style="padding:16px 18px;margin-bottom:16px">${rek}</div>
+        <div class="card" style="padding:13.6px 15.3px;margin-bottom:13.6px">${rek}</div>
         ${sinkron}
-        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">Transaksi 30 hari terakhir${txs.length > tampil.length ? ' (40 terbaru)' : ''}</div>
-        <div class="card" style="padding:4px 16px;max-height:340px;overflow-y:auto">${daftar}</div>
+        <div style="font-size:13.6px;font-weight:800;color:var(--text);margin-bottom:6.8px">Transaksi 30 hari terakhir${txs.length > tampil.length ? ' (40 terbaru)' : ''}</div>
+        <div class="card" style="padding:3.4px 13.6px;max-height:289px;overflow-y:auto">${daftar}</div>
       `);
     }
 </script>
