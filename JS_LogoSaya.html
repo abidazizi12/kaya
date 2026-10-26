@@ -1,0 +1,54 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - LOGO SAYA (opsional)
+     * Tempat menambahkan logo akun dan investasi milikmu sendiri.
+     * File ini sengaja KOSONG. Kalau tidak diisi, semua akun memakai ikon bawaan.
+     * Wajib di-include SETELAH JS_Logo di Index.html.
+     *
+     * CARA MENAMBAH LOGO (2 langkah, per logo):
+     *
+     * 1) Daftarkan gambarnya:
+     *      KAYA_LOGOS.namalogo = { src: 'ALAMAT_GAMBAR', shape: 'BENTUK' };
+     *
+     *    ALAMAT_GAMBAR boleh berupa:
+     *      - alamat gambar di internet yang diawali https://
+     *        (paling mudah; butuh internet saat aplikasi dibuka)
+     *      - data URI (data:image/png;base64,....) kalau gambar mau disimpan di dalam file ini
+     *        (tetap tampil walau offline, tetapi barisnya sangat panjang)
+     *
+     *    BENTUK yang tersedia:
+     *      'circle' : logo bulat, ditaruh di dalam lingkaran putih
+     *      'app'    : gambar memenuhi kotak dengan sudut membulat (cocok untuk ikon aplikasi)
+     *      'tile'   : logo di dalam kotak putih bersudut membulat
+     *      'wide'   : logo lebar (tulisan memanjang) di dalam kotak putih
+     *      'card'   : foto kartu. Wajib tambah ratio (lebar dibagi tinggi), mis. ratio: 1.59
+     *
+     * 2) Pasang aturannya supaya KAYA tahu logo ini untuk akun yang mana:
+     *      LOGO_RULES_AKUN.push(['kata di nama akun', 'namalogo']);
+     *    Untuk kartu investasi, pakai LOGO_RULES_INV.push([...]).
+     *
+     *    Kata di nama akun ditulis HURUF KECIL. Cocok kalau nama akunnya mengandung kata itu.
+     *    URUTAN PENTING: aturan paling atas dicek lebih dulu. Taruh kata yang lebih spesifik
+     *    di atas (mis. 'tokopedia' sebelum 'bri').
+     *
+     * CONTOH (hapus tanda // di depan baris untuk memakainya):
+     *
+     *    // KAYA_LOGOS.bank = { src: 'https://contoh.com/logo-bank.png', shape: 'app' };
+     *    // LOGO_RULES_AKUN.push(['bank', 'bank']);
+     *
+     *    // KAYA_LOGOS.sekuritas = { src: 'https://contoh.com/logo-sekuritas.svg', shape: 'tile' };
+     *    // LOGO_RULES_INV.push(['sekuritas', 'sekuritas']);
+     *
+     * CATATAN:
+     * - Logo merek adalah milik pemiliknya. Pakai untuk keperluan pribadi saja.
+     * - Jangan memakai foto kartu yang masih menampilkan nama atau nomor kartu.
+     *   Tutup dulu bagian itu sebelum dipakai.
+     * - Kalau ada salah ketik di file ini, hanya logo yang tidak tampil. Bagian aplikasi
+     *   yang lain tetap jalan.
+     * - Saat memperbarui KAYA dari repo, JANGAN timpa file ini, supaya logomu tidak hilang.
+     * ============================================================
+     */
+
+    // Tulis logo milikmu di bawah baris ini:
+</script>
