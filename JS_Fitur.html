@@ -1,0 +1,720 @@
+<script>
+    function renderTabungan() {
+      const goals = state.tabungan;
+      return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+          <div class="display" style="font-weight:800;font-size:26px;color:var(--text)">Target Tabungan</div>
+        </div>
+        ${goals.length === 0 ? '<div class="card" style="padding:28px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500;margin-bottom:20px">Belum ada target tabungan.</div>' : ''}
+        ${goals.map(g => {
+          const pctLabel = g.target ? Math.round((g.collected / g.target) * 100) : 0;
+          const done = g.collected >= g.target && g.target > 0;
+          return `<div class="card" style="padding:20px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+              ${iconBubble(done ? 'party-popper' : 'piggy-bank', done ? '#00C896' : '#7C6CF6', 46)}
+              <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700;color:var(--text)">${escapeHtml(g.name)}</div>
+              ${g.targetDate ? `<div style="font-size:13px;color:var(--text-muted);font-weight:500">Target: ${g.targetDate}</div>` : ''}</div>
+              <button onclick="removeTabungan('${g.id}')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
+            </div>
+            <div style="height:12px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:10px"><div style="width:${pctLabel}%;height:100%;background:linear-gradient(90deg,var(--violet),var(--sunrise-a));border-radius:999px"></div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <span class="tabular" style="font-size:14px;color:var(--text-muted);font-weight:600">${fmtRp(g.collected)} / ${fmtRp(g.target)}</span>
+              <span style="font-size:14px;font-weight:800;color:${done?'var(--emerald)':'var(--violet)'}">${pctLabel}%</span>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button onclick="openTabunganSetor('${g.id}', 1)" style="flex:1;background:var(--violet-soft);border:none;border-radius:14px;padding:12px 0;color:var(--violet);font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="plus" style="width:16px;height:16px"></i> Setor</button>
+              <button onclick="openTabunganSetor('${g.id}', -1)" style="flex:1;background:var(--surface-raised);border:none;border-radius:14px;padding:12px 0;color:var(--text-muted);font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="minus" style="width:16px;height:16px"></i> Tarik</button>
+            </div>
+          </div>`;
+        }).join('')}
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin:24px 0 12px">Buat target baru</div>
+        <label class="field-label" for="tabungan-name" style="margin-top:0">Nama target</label><input id="tabungan-name" oninput="window._tabunganName=this.value" value="${escapeHtml(window._tabunganName||'')}" class="field-input" placeholder="Misal: Dana Darurat">
+        <label class="field-label" for="tabungan-target">Target nominal (Rp)</label><input id="tabungan-target" oninput="formatNumberInput(this); window._tabunganTargetRaw=this.value" value="${window._tabunganTargetRaw||''}" class="field-input" placeholder="5.000.000" inputmode="numeric">
+        <label class="field-label" for="tabungan-date">Tenggat (opsional)</label><input id="tabungan-date" oninput="window._tabunganDateRaw=this.value" value="${window._tabunganDateRaw||''}" class="field-input" type="date">
+        <div id="tabungan-error" class="err"></div>
+        <button class="btn-primary" onclick="submitTabungan()"><i data-lucide="plus" style="width:20px;height:20px"></i> Buat target</button>
+      `;
+    }
+    
+    function submitTabungan() {
+      const name = document.getElementById('tabungan-name').value.trim();
+      const target = parseFloat(document.getElementById('tabungan-target').value.replace(/[^0-9]/g,''));
+      if (!name || !target || target <= 0) return;
+      window._tabunganName = ''; window._tabunganTargetRaw = ''; window._tabunganDateRaw = ''; render();
+      google.script.run.withSuccessHandler(() => { loadData(); showToast('Tersimpan!'); }).withFailureHandler(onError).addTabungan({ name: name, target: target, targetDate: document.getElementById('tabungan-date').value || '' });
+    }
+    function removeTabungan(id) { google.script.run.withSuccessHandler(() => { loadData(); showToast('Terhapus!'); }).withFailureHandler(onError).deleteTabungan(id); }
+
+    function openTabunganSetor(goalId, sign) { window._tabunganGoalId = goalId; window._tabunganSign = sign; window._tabunganAccount = (state.accounts[0] && state.accounts[0].name) || 'Tunai'; window._tabunganActionAmountRaw = ''; renderTabunganSetorModal(); }
+    function renderTabunganSetorModal() {
+      const isDeposit = window._tabunganSign === 1; const goal = state.tabungan.find(g => g.id === window._tabunganGoalId);
+      const accountChips = state.accounts.filter(a => a.type !== 'Kredit').map(a => `<button class="chip ${window._tabunganAccount===a.name?'active':''}" onclick="window._tabunganAccount='${escapeHtml(a.name)}';renderTabunganSetorModal()">${escapeHtml(a.name)}</button>`).join('');
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="display" style="font-weight:800;font-size:24px;color:var(--text)">${isDeposit?'Setor ke':'Tarik dari'} ${escapeHtml(goal?goal.name:'')}</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+        <div class="card" style="padding:20px;margin-bottom:20px"><label for="tabungan-setor-amount" style="color:var(--text-muted);font-size:13px;margin-bottom:6px;font-weight:700;display:block">NOMINAL (RP)</label><input id="tabungan-setor-amount" oninput="formatNumberInput(this); window._tabunganActionAmountRaw=this.value" value="${window._tabunganActionAmountRaw||''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;color:${isDeposit?'var(--violet)':'var(--coral)'}"></div>
+        <label class="field-label" style="margin-top:0">${isDeposit?'Dari akun':'Ke akun'}</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${accountChips}</div>
+        <div id="tabungan-setor-error" class="err"></div><button class="btn-primary" onclick="submitTabunganSetor()"><i data-lucide="check" style="width:20px;height:20px"></i> ${isDeposit?'Simpan setoran':'Simpan penarikan'}</button>
+      `);
+    }
+    function submitTabunganSetor() {
+      const amount = parseFloat(document.getElementById('tabungan-setor-amount').value.replace(/[^0-9]/g,''));
+      if (!amount || amount <= 0) return;
+      const isDeposit = window._tabunganSign === 1;
+      const g = state.tabungan.find(x => x.id === window._tabunganGoalId);
+      if (g) g.collected = (g.collected || 0) + (amount * window._tabunganSign);
+      state.transactions.unshift({
+          id: 'temp-' + Date.now(), date: new Date().toISOString().slice(0,10), desc: (isDeposit?'Setor tabungan: ':'Tarik tabungan: ') + g.name,
+          category: 'Tabungan', type: isDeposit?'Keluar':'Masuk', amount: amount, account: window._tabunganAccount
+      });
+      closeModal(); render();
+      google.script.run.withSuccessHandler(() => { loadData(); showToast('Tersimpan!'); }).withFailureHandler(onError).addTabunganSetoran(window._tabunganGoalId, amount * window._tabunganSign, window._tabunganAccount, new Date().toISOString().slice(0,10));
+    }
+
+    function renderHutang() {
+      const items = state.hutang;
+      const activeFilter = window._hutangFilter || 'Semua';
+      const showArchive = !!window._hutangShowArchive;
+
+      const utang = items.filter(h => h.type === 'Utang');
+      const piutang = items.filter(h => h.type === 'Piutang');
+      const totalUtang = utang.filter(h=>h.status!=='Lunas').reduce((a,b)=>a+(b.total-b.paid),0);
+      const totalPiutang = piutang.filter(h=>h.status!=='Lunas').reduce((a,b)=>a+(b.total-b.paid),0);
+
+      const renderCard = (h) => {
+        const isUtang = h.type === 'Utang';
+        const sisa = h.total - h.paid;
+        const pct = h.total ? Math.min(h.paid / h.total, 1) : 0;
+        const lunas = h.status === 'Lunas';
+        const color = isUtang ? 'var(--coral)' : 'var(--emerald)';
+        const linkInfo = h.linkAccount ? ` · Sumber: ${escapeHtml(h.linkAccount)}` : '';
+        const payBtnHtml = lunas ? '' :
+          `<button onclick="openHutangPayment('${h.id}')" style="width:100%;background:var(--surface-raised);border:none;border-radius:14px;padding:12px 0;color:var(--text);font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="${isUtang?'arrow-up':'arrow-down'}" style="width:16px;height:16px"></i> ${isUtang?'Bayar':'Terima pembayaran'}</button>`;
+        return `<div class="card" style="padding:20px;margin-bottom:14px;${lunas?'opacity:0.6':''}">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+            ${iconBubble(isUtang?'arrow-up-circle':'arrow-down-circle', isUtang?'#F2836B':'#00C896', 46)}
+            <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700;color:var(--text)">${escapeHtml(h.name)}</div><div style="font-size:13px;color:var(--text-muted);font-weight:500">${lunas?'Lunas':(h.dueDate ? 'Jatuh tempo: '+h.dueDate : 'Tanpa tenggat')}${linkInfo}</div></div>
+            <button onclick="removeHutang('${h.id}')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
+          </div>
+          <div style="height:12px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:10px"><div style="width:${Math.round(pct*100)}%;height:100%;background:${color};border-radius:999px"></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${lunas?'0':'14px'}">
+            <span class="tabular" style="font-size:14px;color:var(--text-muted);font-weight:600">${fmtRp(h.paid)} / ${fmtRp(h.total)}</span>
+            <span style="font-size:14px;font-weight:800;color:${color}">${lunas?'Lunas':'Sisa '+fmtRp(sisa)}</span>
+          </div>
+          ${payBtnHtml}
+        </div>`;
+      };
+
+      const renderCicilanCard = (c) => {
+        const sisa = c.tenor - c.installmentNo; const pct = c.tenor ? Math.min(c.installmentNo / c.tenor, 1) : 0; const lunas = c.status === 'Lunas';
+        const payBtnHtml = lunas ? '' : `<button onclick="payCicilan('${c.id}')" style="width:100%;background:var(--surface-raised);border:none;border-radius:14px;padding:12px 0;color:var(--text);font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="check" style="width:16px;height:16px"></i> Bayar cicilan ke-${c.installmentNo+1}</button>`;
+        return `<div class="card" style="padding:20px;margin-bottom:14px;${lunas?'opacity:0.6':''}">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+            ${iconBubble('calendar-clock', '#7C6CF6', 46)}
+            <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700;color:var(--text)">${escapeHtml(c.name)}</div><div style="font-size:13px;color:var(--text-muted);font-weight:500">${escapeHtml(c.provider)} · ${escapeHtml(c.type)}${c.autoPay?' · Auto-pay aktif':''}</div></div>
+            <button onclick="removeCicilan('${c.id}')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
+          </div>
+          <div style="height:12px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:10px"><div style="width:${Math.round(pct*100)}%;height:100%;background:var(--violet);border-radius:999px"></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${lunas?'0':'14px'}">
+            <span class="tabular" style="font-size:14px;color:var(--text-muted);font-weight:600">${c.installmentNo} / ${c.tenor} cicilan · ${fmtRp(c.amountPerInstallment)}/bulan</span>
+            <span style="font-size:14px;font-weight:800;color:${lunas?'var(--emerald)':'var(--violet)'}">${lunas?'Lunas':'Sisa '+sisa}</span>
+          </div>
+          ${payBtnHtml}
+        </div>`;
+      };
+
+      const activeHutang = items.filter(h => h.status !== 'Lunas' && (activeFilter === 'Semua' || h.type === activeFilter));
+      const archivedHutang = items.filter(h => h.status === 'Lunas');
+      const activeCicilan = state.cicilan.filter(c => c.status !== 'Lunas');
+      const archivedCicilan = state.cicilan.filter(c => c.status === 'Lunas');
+
+      const isUtangForm = (window._hutangType||'Utang') === 'Utang';
+      const availableAccounts = isUtangForm ? state.accounts.filter(a => a.type !== 'Kredit') : state.accounts;
+      const linkAccountChips = availableAccounts.map(a => `<button class="chip ${((window._hutangLinkAccount||availableAccounts[0].name)===a.name?'active':'')}" onclick="window._hutangLinkAccount='${escapeHtml(a.name)}';render()">${escapeHtml(a.name)}</button>`).join('');
+      const cicilanPlaceholderHtml = renderCicilanWizard();
+      const linkAccountSectionHtml = window._hutangLink ? `<label class="field-label">${isUtangForm ? 'Masuk ke akun' : 'Sumber dana / Potong Limit Kartu'}</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${linkAccountChips}</div>` : '';
+
+      const hutangFormHtml =
+        `<label class="field-label" for="hutang-name">Nama ${isUtangForm?'pemberi pinjaman':'peminjam'}</label><input id="hutang-name" oninput="window._hutangNameRaw=this.value" value="${escapeHtml(window._hutangNameRaw||'')}" class="field-input" placeholder="Misal: Budi">` +
+        `<label class="field-label" for="hutang-total">Jumlah total (Rp)</label><input id="hutang-total" oninput="formatNumberInput(this); window._hutangTotalRaw=this.value" value="${window._hutangTotalRaw||''}" class="field-input" placeholder="1.000.000" inputmode="numeric">` +
+        `<label class="field-label" for="hutang-duedate">Jatuh tempo (opsional)</label><input id="hutang-duedate" oninput="window._hutangDueRaw=this.value" value="${window._hutangDueRaw||''}" class="field-input" type="date">` +
+        `<label class="field-label" for="hutang-note">Catatan (opsional)</label><input id="hutang-note" oninput="window._hutangNoteRaw=this.value" value="${escapeHtml(window._hutangNoteRaw||'')}" class="field-input" placeholder="Misal: pakai limit Kartu Kredit BCA">` +
+        `<div class="card" style="padding:16px 20px;margin-top:20px;display:flex;align-items:center;gap:14px">${iconBubble('wallet', '#7C6CF6', 42)}` +
+        `<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--text)">Hubungkan ke Dompet / CC</div><div style="font-size:13px;color:var(--text-muted);font-weight:500">${isUtangForm ? 'Membuat transaksi pemasukan' : 'Mencatat pemakaian saldo atau Kartu Kredit'}</div></div>` +
+        `<label style="position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0;cursor:pointer"><input type="checkbox" onchange="window._hutangLink=this.checked;render()" ${window._hutangLink?'checked':''} style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0;cursor:pointer"><span style="position:absolute;inset:0;background:${window._hutangLink?'var(--violet)':'var(--border)'};border-radius:28px;transition:0.15s;pointer-events:none"><span style="position:absolute;height:22px;width:22px;left:${window._hutangLink?'25px':'3px'};bottom:3px;background:white;border-radius:50%;transition:0.15s;box-shadow:0 2px 4px rgba(0,0,0,0.1)"></span></span></label></div>` +
+        linkAccountSectionHtml + `<div id="hutang-error" class="err"></div><button class="btn-primary" onclick="submitHutang()"><i data-lucide="plus" style="width:20px;height:20px"></i> Simpan catatan</button>`;
+
+      return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button><div class="display" style="font-weight:800;font-size:26px;color:var(--text)">Hutang Piutang & Cicilan</div></div>
+        <div style="display:flex;gap:12px;margin-bottom:24px"><div class="card" style="flex:1;padding:16px"><div style="font-size:13px;color:var(--text-muted);font-weight:600">Total hutang aktif</div><div class="tabular" style="color:var(--coral);font-size:17px;margin-top:6px;font-weight:800">${fmtRp(totalUtang)}</div></div><div class="card" style="flex:1;padding:16px"><div style="font-size:13px;color:var(--text-muted);font-weight:600">Total piutang aktif</div><div class="tabular" style="color:var(--emerald);font-size:17px;margin-top:6px;font-weight:800">${fmtRp(totalPiutang)}</div></div></div>
+        
+        <div style="display:flex;gap:10px;margin-bottom:20px">${['Semua','Utang','Piutang'].map(f => `<button class="chip ${activeFilter===f?'active':''}" onclick="window._hutangFilter='${f}';render()">${f}</button>`).join('')}</div>
+        
+        ${activeHutang.length === 0 && activeCicilan.length === 0 ? '<div class="card" style="padding:28px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500;margin-bottom:20px">Tidak ada hutang, piutang, atau cicilan aktif.</div>' : ''}
+        ${activeHutang.map(renderCard).join('')}
+        ${activeCicilan.map(renderCicilanCard).join('')}
+
+        ${archivedHutang.length > 0 || archivedCicilan.length > 0 ? `
+           <div style="margin:24px 0 12px">
+              <button onclick="window._hutangShowArchive=!window._hutangShowArchive;render()" style="width:100%; background:var(--surface-raised); border:1.5px dashed var(--border); border-radius:16px; padding:12px; color:var(--text-muted); font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px">
+                 <i data-lucide="${showArchive?'chevron-up':'archive'}" style="width:18px;height:18px"></i> ${showArchive?'Sembunyikan Arsip':'Lihat Arsip Selesai (' + (archivedHutang.length + archivedCicilan.length) + ')'}
+              </button>
+           </div>
+           ${showArchive ? archivedHutang.map(renderCard).join('') + archivedCicilan.map(renderCicilanCard).join('') : ''}
+        ` : ''}
+
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin:28px 0 12px">Catat baru</div>
+        <label class="field-label" style="margin-top:0">Jenis</label>
+        <div style="display:flex;gap:10px;margin-bottom:20px">
+          ${[{id:'Utang', icon:'arrow-down-left', label:'Hutang', desc:'Uang yang Anda pinjam', color:'#F2836B'}, {id:'Piutang', icon:'arrow-up-right', label:'Piutang', desc:'Pinjaman / Pakai CC Anda', color:'#00C896'}, {id:'Cicilan', icon:'calendar-clock', label:'Cicilan', desc:'Bayar bertahap terjadwal', color:'#7C6CF6'}].map(t => {
+            const active = (window._hutangType||'Utang') === t.id;
+            return `<button onclick="window._hutangType='${t.id}';render()" style="flex:1;padding:16px 10px;border-radius:18px;cursor:pointer;text-align:center;border:1.5px solid ${active?t.color:'var(--border)'};background:${active?t.color+'1A':'var(--surface)'}"><div class="icon-bubble" style="width:42px;height:42px;background:${t.color}26;margin:0 auto 10px"><i data-lucide="${t.icon}" style="width:20px;height:20px;color:${t.color}"></i></div><div style="font-size:14.5px;font-weight:800;color:${active?t.color:'var(--text)'}">${t.label}</div><div style="font-size:11px;color:var(--text-muted);font-weight:500;margin-top:4px;line-height:1.3">${t.desc}</div></button>`;
+          }).join('')}
+        </div>
+        ${window._hutangType === 'Cicilan' ? cicilanPlaceholderHtml : hutangFormHtml}
+      `;
+    }
+
+    function submitHutang() {
+      const name = document.getElementById('hutang-name').value.trim();
+      const total = parseFloat(document.getElementById('hutang-total').value.replace(/[^0-9]/g,''));
+      if (!name || !total || total <= 0) return;
+      
+      const isUtangForm = (window._hutangType || 'Utang') === 'Utang';
+      const defaultAcc = isUtangForm ? (state.accounts.filter(a=>a.type!=='Kredit')[0]?.name || 'Tunai') : (state.accounts[0]?.name || 'Tunai');
+
+      const item = { 
+        id: 'temp-' + Date.now(), 
+        name: name, 
+        type: window._hutangType || 'Utang', 
+        total: total, 
+        paid: 0, 
+        date: new Date().toISOString().slice(0,10), 
+        dueDate: document.getElementById('hutang-duedate').value || '', 
+        note: document.getElementById('hutang-note').value.trim(), 
+        status: 'Aktif', 
+        linkAccount: window._hutangLink ? (window._hutangLinkAccount || defaultAcc) : '' 
+      };
+      state.hutang.push(item);
+      
+      if (item.linkAccount) {
+         const accObj = state.accounts.find(a => a.name === item.linkAccount);
+         const isCredit = accObj && accObj.type === 'Kredit';
+
+         if (!isUtangForm && isCredit) {
+           state.transactions.unshift({
+               id: 'temp-tx-' + Date.now(), date: item.date, desc: 'Piutang CC: ' + item.name,
+               category: 'Hutang Piutang', type: 'Keluar', amount: item.total, account: item.linkAccount
+           });
+         } else {
+           state.transactions.unshift({
+               id: 'temp-tx-' + Date.now(), date: item.date, desc: (isUtangForm ? 'Terima pinjaman dari ' : 'Pinjamkan ke ') + item.name,
+               category: 'Hutang Piutang', type: isUtangForm ? 'Masuk' : 'Keluar', amount: item.total, account: item.linkAccount
+           });
+         }
+      }
+      
+      window._hutangNameRaw = ''; window._hutangTotalRaw = ''; window._hutangDueRaw = ''; window._hutangNoteRaw = '';
+      render();
+      google.script.run.withSuccessHandler(() => { loadData(); showToast('Tersimpan!'); }).withFailureHandler(onError).addHutang(item);
+    }
+    
+    function removeHutang(id) { google.script.run.withSuccessHandler(() => { loadData(); showToast('Terhapus!'); }).withFailureHandler(onError).deleteHutang(id); }
+    function openHutangPayment(id) { window._hutangPayId = id; window._hutangPayAccount = (state.accounts[0] && state.accounts[0].name) || 'Tunai'; window._hutangPayAmountRaw = ''; renderHutangPaymentModal(); }
+    
+    function renderHutangPaymentModal() {
+      const h = state.hutang.find(x => x.id === window._hutangPayId); if (!h) { closeModal(); return; }
+      const accountChips = state.accounts.map(a => `<button class="chip ${window._hutangPayAccount===a.name?'active':''}" onclick="window._hutangPayAccount='${escapeHtml(a.name)}';renderHutangPaymentModal()">${escapeHtml(a.name)}</button>`).join('');
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="display" style="font-weight:800;font-size:24px;color:var(--text)">${h.type==='Utang'?'Bayar':'Terima pembayaran'} ${escapeHtml(h.name)}</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;font-weight:500">Sisa: ${fmtRp(h.total-h.paid)}</div>
+        <div class="card" style="padding:20px;margin-bottom:20px"><label for="hutang-pay-amount" style="color:var(--text-muted);font-size:13px;margin-bottom:6px;font-weight:700;display:block">NOMINAL (RP)</label><input id="hutang-pay-amount" oninput="formatNumberInput(this); window._hutangPayAmountRaw=this.value" value="${window._hutangPayAmountRaw||''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;color:${h.type==='Utang'?'var(--coral)':'var(--emerald)'}"></div>
+        <label class="field-label" style="margin-top:0">${h.type==='Utang'?'Dari akun':'Ke akun (bisa Kartu Kredit untuk pemulihan limit)'}</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${accountChips}</div>
+        <div id="hutang-pay-error" class="err"></div><button class="btn-primary" onclick="submitHutangPayment()"><i data-lucide="check" style="width:20px;height:20px"></i> Simpan</button>
+      `);
+    }
+    
+    function submitHutangPayment() {
+      const amount = parseFloat(document.getElementById('hutang-pay-amount').value.replace(/[^0-9]/g,''));
+      if (!amount || amount <= 0) return;
+      
+      const h = state.hutang.find(x => x.id === window._hutangPayId);
+      if (h) {
+          h.paid = (h.paid||0) + amount;
+          if (h.paid >= h.total) h.status = 'Lunas';
+      }
+      
+      const isUtang = h.type === 'Utang';
+      const linkAcc = h.linkAccount || '';
+      const accObj = state.accounts.find(a => a.name === window._hutangPayAccount);
+      const isCreditAcc = accObj && accObj.type === 'Kredit';
+
+      if (!isUtang && isCreditAcc) {
+         state.transactions.unshift({
+            id: 'temp-' + Date.now(), date: new Date().toISOString().slice(0,10), desc: 'Pelunasan piutang CC: ' + h.name,
+            category: 'Pembayaran CC', type: 'Masuk', amount: amount, account: window._hutangPayAccount
+         });
+      } else {
+         state.transactions.unshift({
+            id: 'temp-' + Date.now(), date: new Date().toISOString().slice(0,10), desc: isUtang ? ('Bayar hutang: ' + h.name) : ('Terima piutang: ' + h.name),
+            category: 'Hutang Piutang', type: isUtang ? 'Keluar' : 'Masuk', amount: amount, account: window._hutangPayAccount
+         });
+      }
+      
+      closeModal(); render();
+      google.script.run.withSuccessHandler(() => { loadData(); showToast('Pembayaran dicatat!'); }).withFailureHandler(onError).addHutangPayment(window._hutangPayId, amount, window._hutangPayAccount, new Date().toISOString().slice(0,10));
+    }
+
+    function payCicilan(id) { 
+      const c = state.cicilan.find(x => x.id === id);
+      if(c && c.status !== 'Lunas') {
+          c.installmentNo++;
+          if (c.installmentNo >= c.tenor) c.status = 'Lunas';
+          
+          const dateStr = new Date().toISOString().slice(0,10);
+          if (c.ccAccount) {
+              state.transactions.unshift({
+                 id: 'temp-' + Date.now() + 'a', date: dateStr, desc: 'Cicilan ' + c.name + ' (ke-' + c.installmentNo + '/' + c.tenor + ')',
+                 category: 'Cicilan', type: 'Keluar', amount: c.amountPerInstallment, account: c.account
+              });
+              state.transactions.unshift({
+                 id: 'temp-' + Date.now() + 'b', date: dateStr, desc: 'Pemulihan Limit CC: Cicilan ' + c.name,
+                 category: 'Pembayaran CC', type: 'Masuk', amount: c.amountPerInstallment, account: c.ccAccount
+              });
+          } else {
+              state.transactions.unshift({
+                 id: 'temp-' + Date.now(), date: dateStr, desc: 'Cicilan ' + c.name + ' (ke-' + c.installmentNo + '/' + c.tenor + ')',
+                 category: 'Cicilan', type: 'Keluar', amount: c.amountPerInstallment, account: c.account
+              });
+          }
+          
+          render();
+          showToast('Cicilan terbayar!');
+          google.script.run.withSuccessHandler(() => { loadData(); }).withFailureHandler(onError).payCicilanInstallment(id); 
+      }
+    }
+    function removeCicilan(id) { google.script.run.withSuccessHandler(() => { loadData(); showToast('Terhapus!'); }).withFailureHandler(onError).deleteCicilan(id); }
+
+    function renderCicilanWizard() {
+      const step = window._cicilanStep || 1;
+      const stepHeader = (num, title, desc, done) => {
+        const isCurrent = step === num;
+        return `<div style="display:flex;align-items:center;gap:14px;padding:${isCurrent?'0 0 14px':'0'}"><div style="width:30px;height:30px;border-radius:15px;background:${done?'var(--emerald)':(isCurrent?'var(--violet)':'var(--surface-raised)')};display:flex;align-items:center;justify-content:center;flex-shrink:0">${done ? '<i data-lucide="check" style="width:16px;height:16px;color:white"></i>' : `<span style="font-size:14px;font-weight:800;color:${isCurrent?'white':'var(--text-muted)'}">${num}</span>`}</div><div style="flex:1"><div style="font-size:15px;font-weight:800;color:var(--text)">${title}</div>${isCurrent ? `<div style="font-size:13px;color:var(--text-muted);font-weight:500">${desc}</div>` : ''}</div></div>`;
+      };
+
+      let step1Body = step === 1 ? `<label class="field-label" for="cicilan-name">Nama Cicilan</label><input id="cicilan-name" oninput="window._cicilanNameRaw=this.value" value="${escapeHtml(window._cicilanNameRaw||'')}" class="field-input" placeholder="Misal: Motor Beat" style="margin-bottom:10px"><label class="field-label" for="cicilan-provider">Pemberi Cicilan</label><input id="cicilan-provider" oninput="window._cicilanProvRaw=this.value" value="${escapeHtml(window._cicilanProvRaw||'')}" class="field-input" placeholder="Misal: Adira Finance" style="margin-bottom:10px"><label class="field-label">Jenis</label><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px">${CICILAN_JENIS.map(j => `<button class="chip ${((window._cicilanType||CICILAN_JENIS[0])===j?'active':'')}" onclick="window._cicilanType='${j}';render()">${j}</button>`).join('')}</div><button class="btn-primary" onclick="cicilanNextStep(1)" style="margin-top:10px">Lanjutkan</button>` : '';
+      let step2Body = step === 2 ? `<label class="field-label" for="cicilan-tenor" style="margin-top:0">Tenor (jumlah bulan)</label><input id="cicilan-tenor" oninput="formatNumberInput(this); window._cicilanTenorRaw=this.value" value="${window._cicilanTenorRaw||''}" class="field-input" placeholder="12" inputmode="numeric" style="margin-bottom:10px"><label class="field-label" for="cicilan-amount">Jumlah per cicilan (Rp)</label><input id="cicilan-amount" oninput="formatNumberInput(this); window._cicilanAmountRaw=this.value" value="${window._cicilanAmountRaw||''}" class="field-input" placeholder="500.000" inputmode="numeric" style="margin-bottom:10px"><label class="field-label" for="cicilan-startdate">Tanggal jatuh tempo pertama</label><input id="cicilan-startdate" oninput="window._cicilanDateRaw=this.value" value="${window._cicilanDateRaw||''}" class="field-input" type="date" style="margin-bottom:6px"><button class="btn-primary" onclick="cicilanNextStep(2)" style="margin-top:10px">Lanjutkan</button>` : '';
+      
+      let step3Body = step === 3 ? `
+          <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:16px;border:1.5px solid ${window._cicilanIsCC?'var(--violet)':'transparent'}">
+            ${iconBubble('credit-card', window._cicilanIsCC?'#7C6CF6':'#928DAA', 42)}
+            <div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--text)">Tagih via Kartu Kredit</div><div style="font-size:13px;color:var(--text-muted);font-weight:500">Mencatat pembelian utuh di awal ke CC</div></div>
+            <label style="position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0;cursor:pointer"><input type="checkbox" onchange="window._cicilanIsCC=this.checked;render()" ${window._cicilanIsCC?'checked':''} style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0;cursor:pointer"><span style="position:absolute;inset:0;background:${window._cicilanIsCC?'var(--violet)':'var(--border)'};border-radius:28px;transition:0.15s;pointer-events:none"><span style="position:absolute;height:22px;width:22px;left:${window._cicilanIsCC?'25px':'3px'};bottom:3px;background:white;border-radius:50%;transition:0.15s;box-shadow:0 2px 4px rgba(0,0,0,0.1)"></span></span></label>
+          </div>
+          ${window._cicilanIsCC ? `
+            <label class="field-label" style="margin-top:0">Pilih Kartu Kredit</label>
+            <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px">${state.accounts.filter(a=>a.type==='Kredit').map(a => `<button class="chip ${((window._cicilanCCAccount||state.accounts.find(x=>x.type==='Kredit')?.name)===a.name?'active':'')}" onclick="window._cicilanCCAccount='${escapeHtml(a.name)}';render()">${escapeHtml(a.name)}</button>`).join('')}</div>
+          ` : ''}
+          <label class="field-label" style="margin-top:0">${window._cicilanIsCC ? 'Sumber Dana Pembayaran Cicilan' : 'Bayar dari akun'}</label>
+          <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px">${state.accounts.filter(a=>a.type!=='Kredit').map(a => `<button class="chip ${((window._cicilanAccount||state.accounts.find(x=>x.type!=='Kredit')?.name)===a.name?'active':'')}" onclick="window._cicilanAccount='${escapeHtml(a.name)}';render()">${escapeHtml(a.name)}</button>`).join('')}</div>
+          <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:16px">${iconBubble('zap', '#FFA53D', 42)}<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--text)">Auto-pay</div><div style="font-size:13px;color:var(--text-muted);font-weight:500">Otomatis dibayar tiap jatuh tempo</div></div><label style="position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0;cursor:pointer"><input type="checkbox" onchange="window._cicilanAutoPay=this.checked;render()" ${window._cicilanAutoPay?'checked':''} style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0;cursor:pointer"><span style="position:absolute;inset:0;background:${window._cicilanAutoPay?'var(--violet)':'var(--border)'};border-radius:28px;transition:0.15s;pointer-events:none"><span style="position:absolute;height:22px;width:22px;left:${window._cicilanAutoPay?'25px':'3px'};bottom:3px;background:white;border-radius:50%;transition:0.15s;box-shadow:0 2px 4px rgba(0,0,0,0.1)"></span></span></label></div>
+          <button class="btn-primary" onclick="submitCicilan()">Buat Cicilan</button>
+      ` : '';
+
+      return `<div class="card" style="padding:20px;margin-bottom:12px;${step===1?'':'opacity:0.6'}">${stepHeader(1, 'Detail Cicilan', 'Nama, pemberi, dan jenis cicilan', step>1)}${step1Body}</div><div class="card" style="padding:20px;margin-bottom:12px;${step===2?'':'opacity:0.6'}">${stepHeader(2, 'Jadwal Cicilan', 'Tenor, jumlah, dan tanggal jatuh tempo', step>2)}${step2Body}</div><div class="card" style="padding:20px;margin-bottom:12px;${step===3?'':'opacity:0.6'}">${stepHeader(3, 'Otomasi & Pengingat', 'Auto-pay dan akun sumber bayar', false)}${step3Body}</div>`;
+    }
+    
+    function cicilanNextStep(fromStep) {
+      if (fromStep === 1) { window._cicilanName = document.getElementById('cicilan-name').value.trim(); window._cicilanProvider = document.getElementById('cicilan-provider').value.trim(); if(window._cicilanName && window._cicilanProvider) { window._cicilanStep = 2; render(); } } 
+      else if (fromStep === 2) { window._cicilanTenor = parseInt(document.getElementById('cicilan-tenor').value.replace(/[^0-9]/g,''), 10); window._cicilanAmount = parseFloat(document.getElementById('cicilan-amount').value.replace(/[^0-9]/g,'')); window._cicilanStartDate = document.getElementById('cicilan-startdate').value; if(window._cicilanTenor && window._cicilanAmount && window._cicilanStartDate) { window._cicilanStep = 3; render(); } }
+    }
+    
+    function submitCicilan() {
+      const item = { 
+        name: window._cicilanName, 
+        provider: window._cicilanProvider, 
+        type: window._cicilanType || CICILAN_JENIS[0], 
+        tenor: window._cicilanTenor, 
+        amountPerInstallment: window._cicilanAmount, 
+        startDate: window._cicilanStartDate, 
+        account: window._cicilanAccount || state.accounts.find(a=>a.type!=='Kredit')?.name || 'Tunai', 
+        ccAccount: window._cicilanIsCC ? (window._cicilanCCAccount || state.accounts.find(a=>a.type==='Kredit')?.name) : '',
+        autoPay: !!window._cicilanAutoPay 
+      };
+      
+      state.cicilan.push({
+          id: 'temp-'+Date.now(), name: item.name, provider: item.provider, type: item.type, tenor: item.tenor,
+          amountPerInstallment: item.amountPerInstallment, account: item.account, ccAccount: item.ccAccount, nextDue: item.startDate, installmentNo: 0, autoPay: item.autoPay, status: 'Aktif'
+      });
+      
+      if (item.ccAccount) {
+          const totalAmount = item.tenor * item.amountPerInstallment;
+          state.transactions.unshift({
+              id: 'temp-tx-' + Date.now(), date: new Date().toISOString().slice(0,10), 
+              desc: 'Limit CC Terpakai: ' + item.name + ' (' + item.provider + ')',
+              category: 'Hutang Piutang', type: 'Keluar', amount: totalAmount, account: item.ccAccount
+          });
+      }
+
+      window._cicilanStep = 1; window._cicilanNameRaw=''; window._cicilanProvRaw=''; window._cicilanTenorRaw=''; window._cicilanAmountRaw=''; window._cicilanDateRaw=''; window._cicilanIsCC=false;
+      render();
+      showToast('Cicilan tersimpan!');
+      google.script.run.withSuccessHandler(() => { loadData(); }).withFailureHandler(onError).addCicilan(item);
+    }
+
+    function renderBerulang() {
+      const items = state.berulang;
+      const renderCard = (b) => {
+        const meta = catMeta(b.category); const isIn = b.type === 'Masuk';
+        return `<div class="card" style="padding:16px 20px;margin-bottom:12px;${b.active?'':'opacity:0.55'}"><div style="display:flex;align-items:center;gap:14px">${iconBubble(meta.icon, meta.color, 46)}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(b.desc)}</div><div style="font-size:13px;color:var(--text-muted);font-weight:500">${b.frequency} · ${b.account} · berikutnya ${b.nextDate}</div></div><div class="tabular" style="font-size:15px;font-weight:800;color:${isIn?'var(--emerald)':'var(--text)'};flex-shrink:0;margin-right:8px">${isIn?'+':'-'}${fmtRp(b.amount)}</div></div><div style="display:flex;gap:10px;margin-top:14px"><button onclick="toggleBerulangUI('${b.id}', ${!b.active})" style="flex:1;background:var(--surface-raised);border:none;border-radius:12px;padding:10px 0;color:var(--text);font-size:14px;font-weight:700;cursor:pointer">${b.active?'Nonaktifkan':'Aktifkan'}</button><button onclick="removeBerulang('${b.id}')" style="background:none;border:none;cursor:pointer;padding:10px;color:var(--text-muted)"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button></div></div>`;
+      };
+      return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button><div class="display" style="font-weight:800;font-size:26px;color:var(--text)">Transaksi Berulang</div></div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:18px;font-weight:500">Transaksi otomatis dicatat sesuai frekuensinya.</div>
+        ${items.length === 0 ? '<div class="card" style="padding:28px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500;margin-bottom:20px">Belum ada transaksi berulang.</div>' : ''}
+        ${items.map(renderCard).join('')}
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin:24px 0 12px">Buat baru</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px">${['Keluar','Masuk'].map(t => `<button onclick="window._berulangType='${t}';render()" style="flex:1;padding:13px 0;border-radius:16px;font-weight:700;font-size:15px;cursor:pointer;border:none;background:${(window._berulangType||'Keluar')===t ? (t==='Keluar'?'var(--coral)':'var(--emerald)') : 'var(--surface-raised)'};color:${(window._berulangType||'Keluar')===t ? 'white' : 'var(--text-muted)'}">${t}</button>`).join('')}</div>
+        <label class="field-label" for="berulang-desc" style="margin-top:0">Keterangan</label><input id="berulang-desc" oninput="window._berulangDesc=this.value" value="${escapeHtml(window._berulangDesc || '')}" class="field-input" placeholder="Misal: Langganan Netflix">
+        <label class="field-label" for="berulang-amount">Nominal (Rp)</label><input id="berulang-amount" oninput="formatNumberInput(this); window._berulangAmountRaw=this.value" value="${window._berulangAmountRaw || ''}" class="field-input" placeholder="54.000" inputmode="numeric">
+        <label class="field-label">Kategori</label><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">${state.categories.filter(c=>c.name!=='Transfer Antar Rekening' && c.name!=='Pembayaran CC').map(c => `<button class="chip ${(window._berulangCategory||state.categories[0].name)===c.name?'active':''}" onclick="window._berulangCategory='${escapeHtml(c.name)}';render()">${escapeHtml(c.name)}</button>`).join('')}</div>
+        <label class="field-label">Akun</label><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">${state.accounts.map(a => `<button class="chip ${(window._berulangAccount||state.accounts[0].name)===a.name?'active':''}" onclick="window._berulangAccount='${escapeHtml(a.name)}';render()">${escapeHtml(a.name)}</button>`).join('')}</div>
+        <label class="field-label">Frekuensi</label><div style="display:flex;gap:10px;margin-bottom:8px">${['Harian','Mingguan','Bulanan'].map(f => `<button class="chip ${(window._berulangFreq||'Bulanan')===f?'active':''}" onclick="window._berulangFreq='${f}';render()">${f}</button>`).join('')}</div>
+        <label class="field-label" for="berulang-start">Mulai tanggal</label><input id="berulang-start" oninput="window._berulangStartDate=this.value" value="${window._berulangStartDate || ''}" class="field-input" type="date">
+        <div id="berulang-error" class="err"></div><button class="btn-primary" onclick="submitBerulang()"><i data-lucide="plus" style="width:20px;height:20px"></i> Buat transaksi berulang</button>
+      `;
+    }
+    
+    function submitBerulang() {
+      const desc = document.getElementById('berulang-desc').value.trim();
+      const amount = parseFloat(document.getElementById('berulang-amount').value.replace(/[^0-9]/g,''));
+      if (!desc || !amount || amount <= 0) return;
+      
+      const item = { desc: desc, category: window._berulangCategory || state.categories[0].name, type: window._berulangType || 'Keluar', amount: amount, account: window._berulangAccount || state.accounts[0].name, frequency: window._berulangFreq || 'Bulanan', startDate: document.getElementById('berulang-start').value || new Date().toISOString().slice(0,10) };
+      state.berulang.push({
+          id: 'temp-' + Date.now(), desc: item.desc, category: item.category, type: item.type, amount: item.amount, account: item.account, frequency: item.frequency, nextDate: item.startDate, active: true
+      });
+      window._berulangDesc = ''; window._berulangAmountRaw = ''; window._berulangStartDate = '';
+      render();
+      showToast('Tersimpan!');
+      google.script.run.withSuccessHandler(() => { loadData(); }).withFailureHandler(onError).addBerulang(item);
+    }
+    function toggleBerulangUI(id, active) { const b = state.berulang.find(x => x.id === id); if (b) b.active = active; render(); google.script.run.withFailureHandler(onError).toggleBerulang(id, active); }
+    function removeBerulang(id) { google.script.run.withSuccessHandler(() => { loadData(); showToast('Terhapus!'); }).withFailureHandler(onError).deleteBerulang(id); }
+
+    function updateGroupBudgetUI(groupName, val) { 
+        const budget = parseFloat(String(val).replace(/[^0-9]/g,'')) || 0; 
+        state.groupBudgets[groupName] = budget; 
+        showToast('Budget grup tersimpan!');
+        google.script.run.updateGroupBudget(groupName, budget); 
+        setTimeout(render, 100);
+    }
+    
+    function updateAccountInitialUI(name, val) { 
+        const initial = parseFloat(String(val).replace(/[^0-9]/g,'')) || 0; 
+        const acc = state.accounts.find(a => a.name === name); 
+        if (acc) acc.initial = initial; 
+        showToast('Saldo akun tersimpan!');
+        google.script.run.updateAccountInitial(name, initial); 
+    }
+
+    function updateAccountLimitUI(name, val) {
+        const limit = parseFloat(String(val).replace(/[^0-9]/g,'')) || 0;
+        const acc = state.accounts.find(a => a.name === name);
+        if (acc) acc.limit = limit;
+        showToast('Limit kartu tersimpan!');
+        google.script.run.updateAccountLimit(name, limit);
+    }
+    
+    function addAccountUI() { 
+        const input = document.getElementById('new-account-name'); 
+        const name = input.value.trim(); 
+        if (!name || state.accounts.some(a => a.name.toLowerCase() === name.toLowerCase())) return; 
+        const type = window._newAccType || 'Aset';
+        let limit = 0;
+        if(type === 'Kredit') {
+            const limitInput = document.getElementById('new-account-limit');
+            if(limitInput) limit = parseFloat(limitInput.value.replace(/[^0-9]/g,'')) || 0;
+        }
+        state.accounts.push({ name: name, initial: 0, type: type, limit: limit }); 
+        render(); 
+        google.script.run.withFailureHandler(onError).addAccount(name, 0, type, limit); 
+    }
+    
+    function deleteTx(id) { 
+        state.transactions = state.transactions.filter(t => t.id !== id); render();
+        showToast('Transaksi terhapus');
+        google.script.run.withSuccessHandler(() => { loadData(); }).withFailureHandler(onError).deleteTransaction(id); 
+    }
+
+    function closeModal(e) { if (e) e.preventDefault(); document.getElementById('overlay').classList.remove('show'); }
+    function openOverlay(html) { document.getElementById('sheet').innerHTML = html; document.getElementById('overlay').classList.add('show'); lucide.createIcons(); }
+
+    let fabOpen = false;
+    function toggleFab() {
+      fabOpen = !fabOpen;
+      if (fabOpen) {
+        document.getElementById('fab-backdrop').classList.add('show');
+        document.getElementById('fab-menu').classList.add('show');
+        document.getElementById('fab').classList.add('open');
+      } else {
+        document.getElementById('fab-backdrop').classList.remove('show');
+        document.getElementById('fab-menu').classList.remove('show');
+        document.getElementById('fab').classList.remove('open');
+      }
+    }
+
+    function triggerFabAction(action) {
+      toggleFab();
+      setTimeout(() => {
+        if (action === 'pemasukan') openAddModal('Masuk');
+        else if (action === 'pengeluaran') openAddModal('Keluar');
+        else if (action === 'transfer') openTransferModal();
+        else if (action === 'hutang') setTab('hutang');
+        else if (action === 'tabungan') setTab('tabungan');
+      }, 250);
+    }
+
+    function openAddModal(type) {
+      window._addType = type || 'Keluar';
+      const valid = state.categories.filter(c => window._addType === 'Masuk' ? c.group === 'PENGHASILAN' : c.group !== 'PENGHASILAN');
+      window._addCategory = (valid[0] && valid[0].name) || 'Lainnya'; window._addCategoryGroup = (valid[0] && valid[0].group) || 'LAINNYA';
+      window._addAccount = (state.accounts[0] && state.accounts[0].name) || 'Tunai'; window._addDate = getLocalDateString(new Date()); window._addFieldOpen = null;
+      window._addDesc = ''; window._addAmountRaw = '';
+      renderAddModal();
+    }
+    
+    function toggleAddField(field) { window._addFieldOpen = window._addFieldOpen === field ? null : field; renderAddModal(); }
+    function setAddType(type) {
+      window._addType = type;
+      const valid = state.categories.filter(c => type === 'Masuk' ? c.group === 'PENGHASILAN' : c.group !== 'PENGHASILAN');
+      if (valid.length && !valid.some(c => c.name === window._addCategory)) { window._addCategory = valid[0].name; window._addCategoryGroup = valid[0].group; }
+      renderAddModal();
+    }
+
+    function renderAddModal() {
+      const groupsPresent = GROUP_ORDER.filter(g => state.categories.some(c => c.group === g) && (window._addType === 'Masuk' ? g === 'PENGHASILAN' : g !== 'PENGHASILAN'));
+      if (!groupsPresent.includes(window._addCategoryGroup)) {
+          window._addCategoryGroup = groupsPresent[0] || 'LAINNYA';
+          const fallbackCat = state.categories.find(c => c.group === window._addCategoryGroup);
+          window._addCategory = fallbackCat ? fallbackCat.name : 'Lainnya';
+      }
+      
+      const grupChipsHtml = groupsPresent.map(g => `<button class="chip ${window._addCategoryGroup===g?'active':''}" onclick="window._addCategoryGroup='${g}'; window._addCategory=state.categories.find(c=>c.group==='${g}')?.name || ''; window._addFieldOpen='kategori'; renderAddModal()">${groupMeta(g).label}</button>`).join('');
+      const catsInGroup = state.categories.filter(c => c.group === window._addCategoryGroup);
+      const kategoriChipsHtml = catsInGroup.map(c => `<button class="chip ${window._addCategory===c.name?'active':''}" onclick="window._addCategory='${escapeHtml(c.name)}';window._addFieldOpen=null;renderAddModal()">${escapeHtml(c.name)}</button>`).join('') + `<button onclick="promptAddCategory()" style="flex-shrink:0;padding:11px 18px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;border:1.5px dashed var(--violet);background:var(--violet-soft);color:var(--violet);white-space:nowrap"><i data-lucide="plus" style="width:13px;height:13px;vertical-align:-1px"></i> Baru</button>`;
+
+      const accountChipsHtml = state.accounts.map(a => `<button class="chip ${window._addAccount===a.name?'active':''}" onclick="window._addAccount='${escapeHtml(a.name)}';window._addFieldOpen=null;renderAddModal()">${escapeHtml(a.name)}</button>`).join('') + `<button onclick="promptAddAccount()" style="flex-shrink:0;padding:11px 18px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;border:1.5px dashed var(--border);background:none;color:var(--violet);white-space:nowrap"><i data-lucide="plus" style="width:13px;height:13px;vertical-align:-1px"></i> Baru</button>`;
+      const d = new Date(window._addDate + 'T00:00:00'); const dateLabel = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+      const groupRow = (field, icon, label, value, expandedHtml) => { const open = window._addFieldOpen === field; return `<div style="${field!=='grup'?'border-top:1px solid var(--border);':''}"><button onclick="toggleAddField('${field}')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 6px;text-align:left">${iconBubble(icon, '#7C6CF6', 40)}<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.3px">${label}</div><div style="font-size:16px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</div></div><i data-lucide="${open?'chevron-up':'chevron-down'}" style="width:18px;height:18px;color:var(--text-muted);flex-shrink:0"></i></button>${open ? `<div style="padding:0 6px 16px">${expandedHtml}</div>` : ''}</div>`; };
+
+      const grupRow = groupRow('grup', groupMeta(window._addCategoryGroup).icon, 'Grup Kategori', groupMeta(window._addCategoryGroup).label, `<div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${grupChipsHtml}</div>`);
+      const kategoriRow = groupRow('kategori', catMeta(window._addCategory).icon, 'Kategori', escapeHtml(window._addCategory), `<div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${kategoriChipsHtml}</div>`);
+      const akunRow = groupRow('akun', 'wallet', 'Akun / Kartu Kredit', escapeHtml(window._addAccount), `<div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${accountChipsHtml}</div>`);
+      const tanggalRow = groupRow('tanggal', 'calendar-clock', 'Tanggal & waktu', dateLabel, `<input id="add-date-input" class="field-input" type="date" value="${window._addDate}" onchange="window._addDate=this.value;renderAddModal()">`);
+      const isKeluar = window._addType === 'Keluar';
+
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="display" style="font-weight:800;font-size:26px;color:var(--text)">Tambah Transaksi</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+        <div style="display:flex;gap:6px;background:var(--surface-raised);border-radius:20px;padding:6px;margin-bottom:20px">
+          <button onclick="setAddType('Keluar')" style="flex:1;padding:14px 0;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:8px;background:${isKeluar?'var(--coral)':'transparent'};color:${isKeluar?'white':'var(--text-muted)'};box-shadow:${isKeluar?'0 8px 16px -6px rgba(242,131,107,0.6)':'none'}"><i data-lucide="arrow-up" style="width:16px;height:16px"></i> Pengeluaran</button>
+          <button onclick="setAddType('Masuk')" style="flex:1;padding:14px 0;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:8px;background:${!isKeluar?'var(--emerald)':'transparent'};color:${!isKeluar?'white':'var(--text-muted)'};box-shadow:${!isKeluar?'0 8px 16px -6px rgba(22,184,121,0.6)':'none'}"><i data-lucide="arrow-down" style="width:16px;height:16px"></i> Pemasukan</button>
+        </div>
+        <div class="card" style="padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+          <label for="add-amount" style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:var(--text-muted);flex-shrink:0;cursor:pointer">Rp</label>
+          <input id="add-amount" oninput="formatNumberInput(this); window._addAmountRaw=this.value" value="${window._addAmountRaw || ''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:36px;color:${isKeluar?'var(--coral)':'var(--emerald)'};text-align:right">
+        </div>
+        <label for="add-desc" style="font-size:13px;color:var(--text-muted);font-weight:700;letter-spacing:0.4px;margin-bottom:10px;display:block;cursor:pointer">DETAIL TRANSAKSI</label>
+        <input id="add-desc" class="field-input" value="${escapeHtml(window._addDesc || '')}" oninput="window._addDesc=this.value" placeholder="Judul (Contoh: Makan siang)" style="margin-bottom:12px">
+        <div class="card" style="padding:4px 14px">${grupRow}${kategoriRow}${akunRow}${tanggalRow}</div>
+        <div id="add-error" class="err"></div><button class="btn-primary" onclick="submitAdd()"><i data-lucide="check" style="width:18px;height:18px"></i> Simpan transaksi</button>
+      `);
+    }
+
+    function promptAddCategory() { const name = prompt('Nama kategori baru:'); if (!name || !name.trim()) return; const trimmed = name.trim(); state.categories.push({ name: trimmed, budget: 0, group: window._addCategoryGroup }); window._addCategory = trimmed; renderAddModal(); }
+    function promptAddAccount() { const name = prompt('Nama akun baru:'); if (!name || !name.trim()) return; const trimmed = name.trim(); if (state.accounts.some(a => a.name.toLowerCase() === trimmed.toLowerCase())) { window._addAccount = trimmed; renderAddModal(); return; } state.accounts.push({ name: trimmed, initial: 0, type: 'Aset' }); window._addAccount = trimmed; renderAddModal(); google.script.run.withFailureHandler(onError).addAccount(trimmed, 0, 'Aset', 0); }
+    
+    function submitAdd() {
+      const amount = parseFloat(document.getElementById('add-amount').value.replace(/[^0-9]/g,'')); 
+      const desc = document.getElementById('add-desc').value.trim();
+      if (!amount || amount <= 0 || !desc) return;
+      
+      const tx = { id: 'temp-' + Date.now(), date: window._addDate || getLocalDateString(new Date()), desc: desc, category: window._addCategory, type: window._addType, amount: amount, account: window._addAccount };
+      
+      state.transactions.unshift(tx);
+      closeModal();
+      window._addDesc = ''; window._addAmountRaw = ''; 
+      render();
+      showToast('Tersimpan!');
+      google.script.run.withSuccessHandler(() => { loadData(); }).withFailureHandler(onError).addTransaction(tx);
+    }
+
+    function openTransferModal() {
+      window._transferMode = 'akun'; window._transferError = ''; window._transferAmountRaw = ''; window._transferNotes = '';
+      if (state.accounts.length >= 1) window._transferFrom = state.accounts[0].name;
+      if (state.accounts.length >= 2) window._transferTo = state.accounts[1].name;
+      const activeGoals = state.tabungan.filter(g => g.collected < g.target); if (activeGoals.length > 0) window._transferGoalId = activeGoals[0].id;
+      const activeDebts = state.hutang.filter(h => h.type === 'Utang' && h.status !== 'Lunas'); if (activeDebts.length > 0) window._transferHutangId = activeDebts[0].id;
+      renderTransferModal();
+    }
+
+    function setTransferMode(mode) { window._transferMode = mode; window._transferError=''; renderTransferModal(); }
+    
+    function renderTransferModal() {
+      const mode = window._transferMode || 'akun';
+      const accountChips = (selected, fnName, hideCredit=false, hideEmoney=false) => state.accounts.filter(a => {
+          if(hideCredit && a.type==='Kredit') return false;
+          if(hideEmoney && a.type==='E-money') return false;
+          return true;
+      }).map(a => `<button class="chip ${selected===a.name?'active':''}" onclick="${fnName}('${escapeHtml(a.name)}')">${escapeHtml(a.name)}</button>`).join('');
+      const tabBtn = (id, label) => `<button onclick="setTransferMode('${id}')" style="flex:1;padding:11px 6px;border-radius:14px;font-weight:700;font-size:13.5px;cursor:pointer;border:none;background:${mode===id?'var(--violet)':'var(--surface-raised)'};color:${mode===id?'white':'var(--text-muted)'}">${label}</button>`;
+
+      let bodyHtml = '';
+      if (mode === 'akun') {
+        bodyHtml = `<label class="field-label" style="margin-top:0">Dari akun (E-money tidak bisa jadi sumber transfer)</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px;margin-bottom:8px">${accountChips(window._transferFrom, 'setTransferFrom', true, true)}</div><div style="display:flex;justify-content:center;margin:10px 0"><button onclick="swapTransferAccounts()" style="background:var(--violet-soft);border:none;border-radius:16px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="arrow-up-down" style="width:18px;height:18px;color:var(--violet)"></i></button></div><label class="field-label" style="margin-top:0">Ke akun (Atau E-money / Kartu Kredit)</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${accountChips(window._transferTo, 'setTransferTo')}</div><label class="field-label" for="transfer-notes">Catatan (opsional)</label><input id="transfer-notes" oninput="window._transferNotes=this.value" value="${escapeHtml(window._transferNotes || '')}" class="field-input" placeholder="Misal: bayar tagihan kartu kredit">`;
+      } else if (mode === 'tabungan') {
+        const activeGoals = state.tabungan.filter(g => g.collected < g.target);
+        const goalChips = activeGoals.length === 0 ? `<div class="card" style="padding:16px;color:var(--text-muted);font-size:14.5px;font-weight:500">Belum ada target tabungan.</div>` : activeGoals.map(g => `<button class="chip ${window._transferGoalId===g.id?'active':''}" onclick="window._transferGoalId='${g.id}';renderTransferModal()">${escapeHtml(g.name)}</button>`).join('');
+        bodyHtml = `<label class="field-label" style="margin-top:0">Dari akun</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px;margin-bottom:8px">${accountChips(window._transferFrom, 'setTransferFrom', true, true)}</div><label class="field-label">Tabungan tujuan</label><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px">${goalChips}</div>`;
+      } else {
+        const activeDebts = state.hutang.filter(h => h.type === 'Utang' && h.status !== 'Lunas');
+        const debtChips = activeDebts.length === 0 ? `<div class="card" style="padding:16px;color:var(--text-muted);font-size:14.5px;font-weight:500">Tidak ada hutang aktif.</div>` : activeDebts.map(h => `<button class="chip ${window._transferHutangId===h.id?'active':''}" onclick="window._transferHutangId='${h.id}';renderTransferModal()">${escapeHtml(h.name)} · Sisa ${fmtRp(h.total-h.paid)}</button>`).join('');
+        bodyHtml = `<label class="field-label" style="margin-top:0">Dari akun</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px;margin-bottom:8px">${accountChips(window._transferFrom, 'setTransferFrom', true, true)}</div><label class="field-label" style="margin-top:0">Hutang tujuan</label><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px">${debtChips}</div>`;
+      }
+
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span class="display" style="font-weight:800;font-size:26px;color:var(--text)">Transfer</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+        <div style="display:flex;gap:8px;margin-bottom:20px">${tabBtn('akun','Antar Akun')}${tabBtn('tabungan','Tabungan')}${tabBtn('hutang','Hutang & Cicilan')}</div>
+        ${bodyHtml}
+        <div class="card" style="padding:20px;margin:16px 0">
+          <label for="transfer-amount" style="color:var(--text-muted);font-size:13px;margin-bottom:6px;font-weight:700;display:block">JUMLAH TRANSFER (RP)</label>
+          <input id="transfer-amount" oninput="formatNumberInput(this); window._transferAmountRaw=this.value" value="${window._transferAmountRaw || ''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;color:${mode==='hutang'?'var(--coral)':'var(--violet)'}">
+        </div>
+        <div id="transfer-error" class="err">${window._transferError || ''}</div><button class="btn-primary" onclick="submitTransfer()"><i data-lucide="check" style="width:20px;height:20px"></i> ${mode==='hutang'?'Tambah Pembayaran':'Simpan Transfer'}</button>
+      `);
+    }
+
+    function setTransferFrom(name) { window._transferFrom = name; window._transferError=''; renderTransferModal(); }
+    function setTransferTo(name) { window._transferTo = name; window._transferError=''; renderTransferModal(); }
+    
+    function swapTransferAccounts() {
+      const temp = window._transferFrom;
+      window._transferFrom = window._transferTo;
+      window._transferTo = temp;
+      renderTransferModal();
+    }
+
+    function submitTransfer() {
+      const amount = parseFloat(document.getElementById('transfer-amount').value.replace(/[^0-9]/g,''));
+      if (!amount || amount <= 0) { window._transferError = 'Masukkan nominal yang valid'; renderTransferModal(); return; }
+      
+      const mode = window._transferMode || 'akun';
+      const fromAcc = window._transferFrom;
+      
+      if (mode === 'akun') {
+        const toAcc = window._transferTo;
+        const notes = document.getElementById('transfer-notes').value.trim();
+        if (fromAcc === toAcc) { window._transferError = 'Akun asal dan tujuan sama'; renderTransferModal(); return; }
+        
+        const accObj = state.accounts.find(a => a.name === toAcc);
+        const isCreditCard = accObj && accObj.type === 'Kredit';
+        const date = getLocalDateString(new Date());
+        
+        if (isCreditCard) {
+            state.transactions.unshift({ id: 'temp-1', date, desc: 'Pembayaran CC ' + toAcc + (notes?' - '+notes:''), category: 'Pembayaran CC', type: 'Keluar', amount, account: fromAcc });
+            state.transactions.unshift({ id: 'temp-2', date, desc: 'Pembayaran Masuk ' + (notes?' - '+notes:''), category: 'Pembayaran CC', type: 'Masuk', amount, account: toAcc });
+        } else {
+            state.transactions.unshift({ id: 'temp-1', date, desc: 'Transfer ke ' + toAcc + (notes?' - '+notes:''), category: 'Transfer Antar Rekening', type: 'Keluar', amount, account: fromAcc });
+            state.transactions.unshift({ id: 'temp-2', date, desc: 'Transfer dari ' + fromAcc + (notes?' - '+notes:''), category: 'Transfer Antar Rekening', type: 'Masuk', amount, account: toAcc });
+        }
+        
+        closeModal(); render(); showToast('Transfer diproses');
+        google.script.run.withSuccessHandler(()=>loadData()).withFailureHandler(onError).addTransfer(fromAcc, toAcc, amount, 0, date, notes);
+        
+      } else if (mode === 'tabungan') {
+        if (!window._transferGoalId) { window._transferError = 'Pilih tabungan tujuan'; renderTransferModal(); return; }
+        const g = state.tabungan.find(x => x.id === window._transferGoalId);
+        if (g) g.collected = (g.collected || 0) + amount;
+        
+        state.transactions.unshift({ id: 'temp-1', date: getLocalDateString(new Date()), desc: 'Setor tabungan: ' + (g ? g.name : ''), category: 'Tabungan', type: 'Keluar', amount, account: fromAcc });
+        closeModal(); render(); showToast('Setoran diproses');
+        google.script.run.withSuccessHandler(()=>loadData()).withFailureHandler(onError).addTabunganSetoran(window._transferGoalId, amount, fromAcc, getLocalDateString(new Date()));
+        
+      } else if (mode === 'hutang') {
+        if (!window._transferHutangId) { window._transferError = 'Pilih hutang tujuan'; renderTransferModal(); return; }
+        const h = state.hutang.find(x => x.id === window._transferHutangId);
+        if (h) {
+           h.paid = (h.paid||0) + amount;
+           if(h.paid >= h.total) h.status = 'Lunas';
+        }
+        
+        state.transactions.unshift({ id: 'temp-1', date: getLocalDateString(new Date()), desc: 'Bayar hutang: ' + (h ? h.name : ''), category: 'Hutang Piutang', type: 'Keluar', amount, account: fromAcc });
+        closeModal(); render(); showToast('Pembayaran diproses');
+        google.script.run.withSuccessHandler(()=>loadData()).withFailureHandler(onError).addHutangPayment(window._transferHutangId, amount, fromAcc, getLocalDateString(new Date()));
+      }
+    }
+
+    function openImportModal() {
+        openOverlay(`
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Import Struk / e-Statement</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+            <div style="font-size:15px;color:var(--text-muted);margin-bottom:20px;line-height:1.5">Ekstrak teks dari foto struk atau e-Statement menggunakan Google Docs OCR.</div>
+            <div class="card" style="padding:20px;margin-bottom:20px">
+                <input type="file" id="fileUpload" accept="image/*,application/pdf" style="display:none" onchange="handleFileUpload(this)">
+                <button class="btn-primary" onclick="document.getElementById('fileUpload').click()" style="margin-top:0"><i data-lucide="camera" style="width:20px;height:20px"></i> Pilih Foto / PDF</button>
+            </div>
+            <div id="ocrResult" style="display:none;">
+                <label class="field-label" style="margin-top:0">Hasil Ekstraksi (Salin manual jika perlu):</label>
+                <textarea id="ocrText" class="field-input" style="height:160px;font-family:monospace;font-size:19px;resize:vertical" readonly></textarea>
+            </div>
+        `);
+    }
+
+    function handleFileUpload(input) {
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const reader = new FileReader();
+      
+      const btn = input.nextElementSibling;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader-2" class="lucide-spin" style="width:20px;height:20px;margin-right:8px;"></i> Memproses...`;
+      btn.disabled = true;
+      lucide.createIcons();
+
+      reader.onload = function(e) {
+        const base64Data = e.target.result.split(',')[1];
+        google.script.run.withSuccessHandler(res => {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+          if (res && res.success) {
+             document.getElementById('ocrResult').style.display = 'block';
+             document.getElementById('ocrText').value = res.text;
+             showToast('Ekstraksi selesai!');
+          } else {
+             alert(res?.error || 'Gagal mengekstrak teks');
+          }
+          lucide.createIcons();
+        }).withFailureHandler(err => {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+          alert('Error: ' + err);
+          lucide.createIcons();
+        }).importFromFile(base64Data, file.type, file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        const cached = localStorage.getItem('kaya_state_v2');
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                Object.assign(state, parsed);
+                state.loaded = true;
+                render();
+            } catch(e) {}
+        }
+        loadData();
+    });
+</script>
