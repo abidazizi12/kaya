@@ -1,0 +1,305 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - ANTREAN "PERLU DIPERIKSA"
+     * Notifikasi yang formatnya tidak dikenali webhook ditampilkan di sini
+     * untuk divalidasi: "Catat" (ini transaksi) atau "Bukan transaksi".
+     * ============================================================
+     * File terpisah supaya JS_Core / JS_Halaman / JS_Fitur tidak perlu diubah.
+     * - render() dibungkus: tab 'periksa' dikenali, banner muncul di Beranda & Pengaturan.
+     * - Data dimuat terpisah dari getData() lewat getLogPeriksa() (tidak ikut cache 30 menit).
+     * - Bagian paling bawah: KONFIRMASI HAPUS untuk semua aksi penghapusan.
+     * Wajib di-include SETELAH JS_Fitur di Index.html.
+     */
+    state.periksa = state.periksa || [];
+    state.periksaLoaded = !!state.periksaLoaded;
+
+    (function () {
+      const renderAsli = render;
+      render = function () {
+        if (state.tab === 'periksa') {
+          renderNav();
+          document.getElementById('screen').innerHTML = renderPeriksa();
+          lucide.createIcons();
+        } else {
+          renderAsli();
+          if ((state.tab === 'home' || state.tab === 'pengaturan') && (state.periksa || []).length > 0) {
+            document.getElementById('screen').insertAdjacentHTML('afterbegin', renderPeriksaBanner());
+            lucide.createIcons();
+          }
+        }
+        loadPeriksa(false);
+      };
+    })();
+
+    // Muat daftar dari server. Tanpa force, dibatasi 1x per 15 detik supaya tidak membebani saat render sering.
+    function loadPeriksa(force) {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) return;
+      const now = Date.now();
+      if (!force && now - (window._periksaLastLoad || 0) < 15000) return;
+      window._periksaLastLoad = now;
+      google.script.run
+        .withSuccessHandler(res => {
+          if (!res || !res.success) return;
+          state.periksa = res.items || [];
+          state.periksaLoaded = true;
+          const overlayOpen = document.getElementById('overlay').classList.contains('show');
+          if (!overlayOpen && (state.tab === 'periksa' || state.tab === 'home' || state.tab === 'pengaturan')) render();
+        })
+        .withFailureHandler(() => {})
+        .getLogPeriksa();
+    }
+
+    function openPeriksa() { setTab('periksa'); loadPeriksa(true); }
+
+    function renderPeriksaBanner() {
+      const n = (state.periksa || []).length;
+      return `<div class="card" onclick="openPeriksa()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:16px;cursor:pointer;border:1.5px solid var(--amber)">
+        ${iconBubble('bell-ring', '#FFA53D', 42)}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:800;color:var(--text)">${n} notifikasi perlu diperiksa</div>
+          <div style="font-size:13px;color:var(--text-muted);font-weight:500">Ketuk untuk memastikan transaksi atau bukan</div>
+        </div>
+        <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
+      </div>`;
+    }
+
+    function renderPeriksa() {
+      const items = state.periksa || [];
+      const header = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <button onclick="setTab('home')" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+          <div class="display" style="font-weight:800;font-size:26px;color:var(--text)">Perlu Diperiksa</div>
+        </div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:18px;font-weight:500;line-height:1.5">Notifikasi yang formatnya belum dikenali. Pilih "Catat" kalau ini transaksi, atau "Bukan transaksi" kalau bukan.</div>`;
+
+      if (!state.periksaLoaded) {
+        return header + `<div class="card" style="padding:28px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500">
+          Memuat notifikasi…
+          <button class="btn-primary" onclick="loadPeriksa(true)" style="margin:16px auto 0;max-width:220px;background:var(--surface-raised);color:var(--violet);box-shadow:none">Coba lagi</button>
+        </div>`;
+      }
+      if (items.length === 0) {
+        return header + `<div class="card" style="padding:28px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500">Semua notifikasi sudah diperiksa.</div>`;
+      }
+      return header + items.map(renderPeriksaCard).join('');
+    }
+
+    function renderPeriksaCard(it) {
+      const s = it.suggestion || {};
+      const idq = escapeHtml(it.id);
+      const terbaca = Number(s.amount) > 0 ? ' · terbaca ' + fmtRp(s.amount) : '';
+      return `<div class="card" style="padding:18px 18px 16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:12px;font-weight:800;color:var(--violet);background:var(--violet-soft);border-radius:10px;padding:4px 10px">${escapeHtml(it.app || 'Notifikasi')}</span>
+          <span class="tabular" style="font-size:12.5px;color:var(--text-muted);font-weight:600">${escapeHtml(it.time)}</span>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:var(--text);line-height:1.45;word-break:break-word;margin-bottom:10px">${escapeHtml(it.text || '(teks kosong)')}</div>
+        <div style="font-size:12.5px;color:var(--text-muted);font-weight:600;margin-bottom:14px">${escapeHtml(it.reason)}${terbaca}</div>
+        <div style="display:flex;gap:10px">
+          <button onclick="openPeriksaForm('${idq}')" style="flex:1;background:var(--violet-soft);border:none;border-radius:14px;padding:13px 0;color:var(--violet);font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="check" style="width:16px;height:16px"></i> Catat</button>
+          <button onclick="tolakPeriksa('${idq}')" style="flex:1;background:var(--surface-raised);border:none;border-radius:14px;padding:13px 0;color:var(--text-muted);font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="x" style="width:16px;height:16px"></i> Bukan transaksi</button>
+        </div>
+      </div>`;
+    }
+
+    function openPeriksaForm(id) {
+      const it = (state.periksa || []).find(x => x.id === id);
+      if (!it) return;
+      const s = it.suggestion || {};
+      window._periksa = {
+        id: it.id,
+        type: s.type === 'Masuk' ? 'Masuk' : 'Keluar',
+        category: s.category || 'Lainnya',
+        account: s.account || (state.accounts[0] && state.accounts[0].name) || 'Tunai',
+        date: s.date || getLocalDateString(new Date()),
+        desc: s.desc || '',
+        amountRaw: Number(s.amount) > 0 ? Math.round(Number(s.amount)).toLocaleString('id-ID').replace(/,/g, '.') : '',
+        text: it.text || ''
+      };
+      renderPeriksaForm();
+    }
+
+    function renderPeriksaForm() {
+      const e = window._periksa;
+      const isKeluar = e.type === 'Keluar';
+      const cats = state.categories.map(c => c.name);
+      if (!cats.includes(e.category)) cats.unshift(e.category);
+      const accs = state.accounts.map(a => a.name);
+      if (!accs.includes(e.account)) accs.unshift(e.account);
+      const opts = (list, sel) => list.map(n => `<option value="${escapeHtml(n)}" ${n === sel ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
+
+      openOverlay(`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Catat Transaksi</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+        </div>
+        <div class="card" style="padding:14px 16px;margin-bottom:16px;font-size:13.5px;color:var(--text-muted);font-weight:500;line-height:1.45;word-break:break-word">${escapeHtml(e.text || '(teks kosong)')}</div>
+        <div style="display:flex;gap:6px;background:var(--surface-raised);border-radius:20px;padding:6px;margin-bottom:16px">
+          <button onclick="window._periksa.type='Keluar';renderPeriksaForm()" style="flex:1;padding:12px 0;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;border:none;background:${isKeluar?'var(--coral)':'transparent'};color:${isKeluar?'white':'var(--text-muted)'}">Pengeluaran</button>
+          <button onclick="window._periksa.type='Masuk';renderPeriksaForm()" style="flex:1;padding:12px 0;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;border:none;background:${!isKeluar?'var(--emerald)':'transparent'};color:${!isKeluar?'white':'var(--text-muted)'}">Pemasukan</button>
+        </div>
+        <label class="field-label" for="periksa-amount" style="margin-top:0">Nominal (Rp)</label>
+        <input id="periksa-amount" class="field-input" inputmode="numeric" value="${e.amountRaw}" oninput="formatNumberInput(this); window._periksa.amountRaw=this.value">
+        <label class="field-label" for="periksa-desc">Keterangan</label>
+        <input id="periksa-desc" class="field-input" value="${escapeHtml(e.desc)}" oninput="window._periksa.desc=this.value">
+        <label class="field-label" for="periksa-cat">Kategori</label>
+        <select id="periksa-cat" class="field-input" onchange="window._periksa.category=this.value">${opts(cats, e.category)}</select>
+        <label class="field-label" for="periksa-acc">Akun</label>
+        <select id="periksa-acc" class="field-input" onchange="window._periksa.account=this.value">${opts(accs, e.account)}</select>
+        <label class="field-label" for="periksa-date">Tanggal</label>
+        <input id="periksa-date" class="field-input" type="date" value="${e.date}" onchange="window._periksa.date=this.value">
+        <div id="periksa-error" class="err"></div>
+        <button class="btn-primary" onclick="submitPeriksaForm()"><i data-lucide="check" style="width:18px;height:18px"></i> Simpan transaksi</button>
+      `);
+    }
+
+    // Optimistic UI: hapus dari antrean + tambah transaksi sementara -> panggil server -> sinkron ulang.
+    function submitPeriksaForm() {
+      const e = window._periksa;
+      const amount = parseFloat(String(e.amountRaw).replace(/[^0-9]/g, ''));
+      const desc = String(e.desc || '').trim();
+      if (!amount || amount <= 0 || !desc || !e.date) {
+        document.getElementById('periksa-error').textContent = 'Isi keterangan, nominal, dan tanggal yang valid';
+        return;
+      }
+      const tx = { date: e.date, desc: desc, category: e.category, type: e.type, amount: amount, account: e.account };
+      const logId = e.id;
+      state.periksa = (state.periksa || []).filter(x => x.id !== logId);
+      state.transactions.unshift(Object.assign({ id: 'temp-' + Date.now() }, tx));
+      closeModal(); render(); showToast('Transaksi dicatat!');
+      google.script.run
+        .withSuccessHandler(r => {
+          if (!r || !r.success) showToast((r && r.error) || 'Gagal menyimpan');
+          loadData(); loadPeriksa(true);
+        })
+        .withFailureHandler(() => { showToast('Gagal menyimpan'); loadData(); loadPeriksa(true); })
+        .validasiLogNotif(logId, tx);
+    }
+
+    function tolakPeriksa(id) {
+      if (!confirm('Tandai notifikasi ini sebagai bukan transaksi?')) return;
+      state.periksa = (state.periksa || []).filter(x => x.id !== id);
+      render(); showToast('Ditandai bukan transaksi');
+      google.script.run
+        .withSuccessHandler(r => {
+          if (!r || !r.success) showToast((r && r.error) || 'Gagal menyimpan');
+          loadPeriksa(true);
+        })
+        .withFailureHandler(() => { showToast('Gagal menyimpan'); loadPeriksa(true); })
+        .abaikanLogNotif(id);
+    }
+
+    /**
+     * ============================================================
+     * KONFIRMASI HAPUS
+     * Semua aksi penghapusan (transaksi, hutang, tabungan, cicilan, berulang, investasi)
+     * ditampilkan dialog "Yakin menghapus?" dulu. Fungsi aslinya (di JS_Fitur / JS_Halaman)
+     * tidak diubah dan baru dijalankan setelah pengguna menekan "Hapus".
+     * Mau menonaktifkan: hapus blok ini saja.
+     * ============================================================
+     */
+    function konfirmasiHapus(opt) {
+      window._konfirmHapus = opt;
+      openOverlay(`
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 4px 4px">
+          <div class="icon-bubble" style="width:64px;height:64px;background:#FCE8E6"><i data-lucide="trash-2" style="width:30px;height:30px;color:#C5221F;stroke-width:2.2"></i></div>
+          <div class="display" style="font-weight:800;font-size:22px;color:var(--text);margin-top:16px">${escapeHtml(opt.judul)}</div>
+          ${opt.nama ? `<div style="font-size:16px;font-weight:700;color:var(--text);margin-top:10px;word-break:break-word">${escapeHtml(opt.nama)}</div>` : ''}
+          ${opt.detail ? `<div class="tabular" style="font-size:15px;font-weight:700;color:var(--text-muted);margin-top:4px">${escapeHtml(opt.detail)}</div>` : ''}
+          <div style="font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.5;margin-top:12px">${escapeHtml(opt.pesan || 'Data yang dihapus tidak bisa dikembalikan.')}</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:24px">
+          <button onclick="konfirmasiHapusBatal()" style="flex:1;background:var(--surface-raised);border:none;border-radius:9999px;padding:15px 0;color:var(--text);font-size:16px;font-weight:700;cursor:pointer">Batal</button>
+          <button onclick="konfirmasiHapusYa()" style="flex:1;background:var(--coral);border:none;border-radius:9999px;padding:15px 0;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 18px -6px rgba(234,67,53,0.55)"><i data-lucide="trash-2" style="width:18px;height:18px"></i> Hapus</button>
+        </div>
+      `);
+    }
+    function konfirmasiHapusYa() {
+      const o = window._konfirmHapus; window._konfirmHapus = null;
+      closeModal();
+      if (o && o.onYes) o.onYes();
+    }
+    function konfirmasiHapusBatal() {
+      const o = window._konfirmHapus; window._konfirmHapus = null;
+      closeModal();
+      if (o && o.onCancel) o.onCancel();
+    }
+
+    (function () {
+      const PESAN_TERKAIT = 'Transaksi yang sudah tercatat dari data ini tidak ikut terhapus, jadi saldo akun tidak berubah.';
+
+      const deleteTxAsli = deleteTx;
+      deleteTx = function (id) {
+        const t = state.transactions.find(x => x.id === id);
+        konfirmasiHapus({
+          judul: 'Hapus transaksi ini?',
+          nama: t ? t.desc : '',
+          detail: t ? ((t.type === 'Masuk' ? '+' : '-') + fmtRp(t.amount) + ' · ' + (t.account || 'Tunai')) : '',
+          pesan: 'Saldo akun akan ikut berubah. Data yang dihapus tidak bisa dikembalikan.',
+          onYes: () => deleteTxAsli(id),
+          onCancel: () => { if (t) showTxDetail(id); }
+        });
+      };
+
+      const removeHutangAsli = removeHutang;
+      removeHutang = function (id) {
+        const h = state.hutang.find(x => x.id === id);
+        konfirmasiHapus({
+          judul: 'Hapus catatan ' + (h && h.type === 'Utang' ? 'hutang' : 'piutang') + '?',
+          nama: h ? h.name : '',
+          detail: h ? fmtRp(h.paid) + ' / ' + fmtRp(h.total) : '',
+          pesan: PESAN_TERKAIT,
+          onYes: () => removeHutangAsli(id)
+        });
+      };
+
+      const removeCicilanAsli = removeCicilan;
+      removeCicilan = function (id) {
+        const c = state.cicilan.find(x => x.id === id);
+        konfirmasiHapus({
+          judul: 'Hapus cicilan ini?',
+          nama: c ? c.name : '',
+          detail: c ? c.installmentNo + ' / ' + c.tenor + ' cicilan · ' + fmtRp(c.amountPerInstallment) + '/bulan' : '',
+          pesan: PESAN_TERKAIT,
+          onYes: () => removeCicilanAsli(id)
+        });
+      };
+
+      const removeTabunganAsli = removeTabungan;
+      removeTabungan = function (id) {
+        const g = state.tabungan.find(x => x.id === id);
+        konfirmasiHapus({
+          judul: 'Hapus target tabungan?',
+          nama: g ? g.name : '',
+          detail: g ? fmtRp(g.collected) + ' / ' + fmtRp(g.target) : '',
+          pesan: PESAN_TERKAIT,
+          onYes: () => removeTabunganAsli(id)
+        });
+      };
+
+      const removeBerulangAsli = removeBerulang;
+      removeBerulang = function (id) {
+        const b = state.berulang.find(x => x.id === id);
+        konfirmasiHapus({
+          judul: 'Hapus transaksi berulang?',
+          nama: b ? b.desc : '',
+          detail: b ? b.frequency + ' · ' + fmtRp(b.amount) : '',
+          pesan: 'Transaksi ini tidak akan dicatat otomatis lagi. Transaksi yang sudah tercatat tidak ikut terhapus.',
+          onYes: () => removeBerulangAsli(id)
+        });
+      };
+
+      const removeInvestasiAsli = removeInvestasi;
+      removeInvestasi = function (id) {
+        const inv = state.investasi.find(x => x.id === id);
+        konfirmasiHapus({
+          judul: 'Hapus investasi ini?',
+          nama: inv ? inv.name : '',
+          detail: inv ? 'Nilai sekarang ' + fmtRp(inv.currentValue) : '',
+          pesan: 'Total kekayaan bersih akan berkurang sebesar nilai investasi ini. ' + PESAN_TERKAIT,
+          onYes: () => removeInvestasiAsli(id)
+        });
+      };
+    })();
+</script>
