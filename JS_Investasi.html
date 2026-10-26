@@ -12,8 +12,8 @@
      * Catatan sparkline: KAYA belum menyimpan riwayat nilai, jadi garisnya menghubungkan
      * Modal -> Nilai Sekarang (bukan grafik harian pasar).
      */
-    const INV_H = 352;      // tinggi kartu (px)
-    const INV_GAP = 36;     // tinggi pita kartu yang mengintip (px)
+    const INV_H = 299;      // tinggi kartu (px)
+    const INV_GAP = 31;     // tinggi pita kartu yang mengintip (px)
     const INV_EASE = 'transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease, filter .45s ease';
     const INV_UP = '#86F898', INV_DOWN = '#FFB4A9';
     const INV_WARNA_JENIS = {
@@ -65,6 +65,7 @@
     function invTile(inv, size) {
       const key = typeof logoKeyFor_ === 'function' ? logoKeyFor_(inv.name, LOGO_RULES_INV) : '';
       if (key) return logoHtml_(key, size);
+        size = Math.round(size * UI_SCALE);
       const c = INV_WARNA_JENIS[inv.type] || '#1A73E8';
       const nm = invPecahNama(inv.name).main;
       return `<div style="width:${size}px;height:${size}px;border-radius:24%;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${Math.round(size * 0.4)}px;letter-spacing:-0.02em;flex-shrink:0">${escapeHtml(invInisial(nm))}</div>`;
