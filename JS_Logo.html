@@ -28,7 +28,6 @@
     function logoHtml_(key, s) {
       const L = KAYA_LOGOS[key];
       if (!L) return '';
-        s = Math.round(s * UI_SCALE);
       const base = 'flex-shrink:0;display:block;';
       if (L.shape === 'app') return `<img src="${L.src}" alt="" style="${base}width:${s}px;height:${s}px;border-radius:24%;object-fit:cover">`;
       if (L.shape === 'card') return `<img src="${L.src}" alt="" style="${base}width:${Math.round(s * L.ratio)}px;height:${s}px;border-radius:${Math.max(4, Math.round(s * 0.14))}px;object-fit:cover">`;
@@ -58,6 +57,6 @@
       const key = logoKeyFor_(name, LOGO_RULES_AKUN);
       const L = KAYA_LOGOS[key];
       if (!L || L.shape !== 'card') return '';
-      return `<img src="${L.src}" alt="" style="display:block;width:100%;max-width:221px;margin:0 auto 13.6px;border-radius:11.9px">`;
+      return `<img src="${L.src}" alt="" style="display:block;width:100%;max-width:260px;margin:0 auto 16px;border-radius:14px">`;
     }
 </script>

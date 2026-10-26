@@ -41,7 +41,7 @@
 
     // Ikon bulat versi lembut: latar tint 12% + ikon berwarna (bukan lagi bulatan solid berikon putih)
     function iconBubble(icon, color, size) {
-      size = Math.round((size || 50) * UI_SCALE);
+      size = size || 50;
       const c = temaWarna(color);
       const hex = /^#[0-9a-f]{6}$/i.test(c);
       const bg = hex ? c + '1F' : c;
@@ -63,9 +63,9 @@
       ];
       document.getElementById('bottomnav').innerHTML = items.map(it => it
         ? `<button class="navbtn ${state.tab === it.tab ? 'active' : ''}" style="--c:${it.c};--cbg:${it.bg}" onclick="setTab('${it.tab}')">
-             <div class="navdot"><i data-lucide="${it.icon}" style="width:18.7px;height:18.7px"></i></div><span>${it.label}</span>
+             <div class="navdot"><i data-lucide="${it.icon}" style="width:22px;height:22px"></i></div><span>${it.label}</span>
            </button>`
-        : '<div style="width:54.4px;flex-shrink:0"></div>').join('');
+        : '<div style="width:64px;flex-shrink:0"></div>').join('');
     }
 
     // ---------- App bar atas ----------
@@ -85,13 +85,13 @@
         </div>
         <div class="appbar-right">
           <button class="appbar-btn" onclick="toggleHideBalance()" aria-label="Tampilkan atau sembunyikan saldo">
-            <i data-lucide="${state.hideBalance ? 'eye-off' : 'eye'}" style="width:18.7px;height:18.7px"></i>
+            <i data-lucide="${state.hideBalance ? 'eye-off' : 'eye'}" style="width:22px;height:22px"></i>
           </button>
           <button class="appbar-btn" onclick="setTab('pengaturan')" aria-label="Pengaturan">
-            <i data-lucide="settings" style="width:18.7px;height:18.7px;${state.tab === 'pengaturan' ? 'color:var(--primary)' : ''}"></i>
+            <i data-lucide="settings" style="width:22px;height:22px;${state.tab === 'pengaturan' ? 'color:var(--primary)' : ''}"></i>
           </button>
           <button class="appbar-btn" onclick="refreshData()" aria-label="Muat ulang data">
-            <i data-lucide="refresh-cw" style="width:18.7px;height:18.7px"></i>
+            <i data-lucide="refresh-cw" style="width:22px;height:22px"></i>
           </button>
         </div>
       </div>`;
@@ -111,8 +111,8 @@
       const pengaturanAsli = renderPengaturan;
       renderPengaturan = function () {
         return pengaturanAsli().replace(
-          /<div[^>]*width:54.4px;height:54.4px;background:var\(--navy-deep\)[^>]*>\s*<span[^>]*>K<\/span>\s*<\/div>/,
-          '<div class="kaya-mark" style="width:54.4px;height:54.4px;border-radius:17px;font-size:27.2px;box-shadow:0 6.8px 13.6px -5.1px rgba(26,115,232,0.5)">K</div>'
+          /<div[^>]*width:64px;height:64px;background:var\(--navy-deep\)[^>]*>\s*<span[^>]*>K<\/span>\s*<\/div>/,
+          '<div class="kaya-mark" style="width:64px;height:64px;border-radius:20px;font-size:32px;box-shadow:0 8px 16px -6px rgba(26,115,232,0.5)">K</div>'
         );
       };
     })();
@@ -146,9 +146,9 @@
     }
 
     function temaSecHead(judul, linkLabel, aksi) {
-      return `<div style="display:flex;justify-content:space-between;align-items:center;margin:23.8px 0 10.2px">
-        <div style="font-size:15.3px;font-weight:700;color:var(--text);letter-spacing:-0.01em">${judul}</div>
-        ${linkLabel ? `<button onclick="${aksi}" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:11px;font-weight:700;display:flex;align-items:center;gap:2px;padding:3.4px 0">${linkLabel}<i data-lucide="chevron-right" style="width:13.6px;height:13.6px"></i></button>` : ''}
+      return `<div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px">
+        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.01em">${judul}</div>
+        ${linkLabel ? `<button onclick="${aksi}" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:13px;font-weight:700;display:flex;align-items:center;gap:2px;padding:4px 0">${linkLabel}<i data-lucide="chevron-right" style="width:16px;height:16px"></i></button>` : ''}
       </div>`;
     }
 
@@ -175,36 +175,36 @@
       const dates = Object.keys(grouped).sort().reverse();
 
       const aksi = (ikon, label, fn, solid) => `
-        <button onclick="${fn}" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5.1px;padding:0">
-          <div style="width:40.8px;height:40.8px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${solid ? '#FFFFFF' : 'rgba(255,255,255,0.18)'};color:${solid ? 'var(--primary)' : '#FFFFFF'};box-shadow:${solid ? '0 3.4px 8.5px rgba(0,0,0,0.15)' : 'none'}"><i data-lucide="${ikon}" style="width:18.7px;height:18.7px"></i></div>
-          <span style="font-size:10.2px;font-weight:600;color:#FFFFFF">${label}</span>
+        <button onclick="${fn}" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0">
+          <div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${solid ? '#FFFFFF' : 'rgba(255,255,255,0.18)'};color:${solid ? 'var(--primary)' : '#FFFFFF'};box-shadow:${solid ? '0 4px 10px rgba(0,0,0,0.15)' : 'none'}"><i data-lucide="${ikon}" style="width:22px;height:22px"></i></div>
+          <span style="font-size:12px;font-weight:600;color:#FFFFFF">${label}</span>
         </button>`;
 
       const hero = `
-        <div style="position:relative;border-radius:23.8px;padding:18.7px 17px 17px;overflow:hidden;background:var(--hero-gradient);box-shadow:0 10.2px 23.8px -5.1px rgba(26,115,232,0.38)">
-          <div style="position:absolute;top:-40.8px;right:-40.8px;width:149.6px;height:149.6px;border-radius:50%;background:rgba(255,255,255,0.10)"></div>
-          <div style="position:absolute;bottom:-27.2px;left:-27.2px;width:122.4px;height:122.4px;border-radius:50%;background:rgba(134,248,152,0.14)"></div>
+        <div style="position:relative;border-radius:28px;padding:22px 20px 20px;overflow:hidden;background:var(--hero-gradient);box-shadow:0 12px 28px -6px rgba(26,115,232,0.38)">
+          <div style="position:absolute;top:-48px;right:-48px;width:176px;height:176px;border-radius:50%;background:rgba(255,255,255,0.10)"></div>
+          <div style="position:absolute;bottom:-32px;left:-32px;width:144px;height:144px;border-radius:50%;background:rgba(134,248,152,0.14)"></div>
           <div style="position:relative;z-index:1">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:6.8px">
-              <div style="display:flex;align-items:center;gap:5.1px;min-width:0"><i data-lucide="shield-check" style="width:13.6px;height:13.6px;color:#D8E2FF;flex-shrink:0"></i><span style="font-size:9.3px;font-weight:700;letter-spacing:0.04em;color:#D8E2FF;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Saldo Bersih (Aset Lancar)</span></div>
-              <span class="tabular" style="flex-shrink:0;display:inline-flex;align-items:center;gap:2px;padding:2.5px 8.5px;border-radius:9999px;background:rgba(255,255,255,0.2);color:#fff;font-size:9.3px;font-weight:700"><i data-lucide="${naik ? 'arrow-up' : 'arrow-down'}" style="width:10.2px;height:10.2px"></i>${state.hideBalance ? 'Bulan ini' : (naik ? '+' : '-') + fmtRpShort(Math.abs(selisih)) + ' bln ini'}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <div style="display:flex;align-items:center;gap:6px;min-width:0"><i data-lucide="shield-check" style="width:16px;height:16px;color:#D8E2FF;flex-shrink:0"></i><span style="font-size:11px;font-weight:700;letter-spacing:0.04em;color:#D8E2FF;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Saldo Bersih (Aset Lancar)</span></div>
+              <span class="tabular" style="flex-shrink:0;display:inline-flex;align-items:center;gap:2px;padding:3px 10px;border-radius:9999px;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700"><i data-lucide="${naik ? 'arrow-up' : 'arrow-down'}" style="width:12px;height:12px"></i>${state.hideBalance ? 'Bulan ini' : (naik ? '+' : '-') + fmtRpShort(Math.abs(selisih)) + ' bln ini'}</span>
             </div>
-            <div class="display tabular" style="color:#fff;font-size:30.6px;font-weight:800;line-height:1.2;margin-top:8.5px;letter-spacing:-0.025em">${fmtHide(totalLancar)}</div>
-            <div style="font-size:10.2px;color:#D8E2FF;margin-top:2px">Tersedia di ${asetLancar.length} akun lancar</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6.8px;margin-top:15.3px;padding-top:13.6px;border-top:1px solid rgba(255,255,255,0.18)">
+            <div class="display tabular" style="color:#fff;font-size:36px;font-weight:800;line-height:1.2;margin-top:10px;letter-spacing:-0.025em">${fmtHide(totalLancar)}</div>
+            <div style="font-size:12px;color:#D8E2FF;margin-top:2px">Tersedia di ${asetLancar.length} akun lancar</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.18)">
               ${aksi('arrow-up-right', 'Keluar', "openAddModal('Keluar')", true)}
               ${aksi('arrow-down-left', 'Masuk', "openAddModal('Masuk')", false)}
               ${aksi('arrow-right-left', 'Transfer', 'openTransferModal()', false)}
               ${aksi('scroll-text', 'Hutang', "setTab('hutang')", false)}
             </div>
-            <div style="display:flex;gap:8.5px;margin-top:15.3px">
-              <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:13.6px;padding:10.2px 11.9px">
-                <div style="display:flex;align-items:center;gap:5.1px;margin-bottom:3.4px"><i data-lucide="arrow-down-left" style="width:11.9px;height:11.9px;color:#fff"></i><span style="font-size:10.2px;color:#D8E2FF;font-weight:600">Total Pemasukan</span></div>
-                <div class="tabular" style="font-size:12.8px;color:#fff;font-weight:800">${fmtHide(income)}</div>
+            <div style="display:flex;gap:10px;margin-top:18px">
+              <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:16px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><i data-lucide="arrow-down-left" style="width:14px;height:14px;color:#fff"></i><span style="font-size:12px;color:#D8E2FF;font-weight:600">Total Pemasukan</span></div>
+                <div class="tabular" style="font-size:15px;color:#fff;font-weight:800">${fmtHide(income)}</div>
               </div>
-              <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:13.6px;padding:10.2px 11.9px">
-                <div style="display:flex;align-items:center;gap:5.1px;margin-bottom:3.4px"><i data-lucide="arrow-up-right" style="width:11.9px;height:11.9px;color:#fff"></i><span style="font-size:10.2px;color:#D8E2FF;font-weight:600">Total Pengeluaran</span></div>
-                <div class="tabular" style="font-size:12.8px;color:#fff;font-weight:800">${fmtHide(expense)}</div>
+              <div style="flex:1;background:rgba(255,255,255,0.14);border-radius:16px;padding:12px 14px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><i data-lucide="arrow-up-right" style="width:14px;height:14px;color:#fff"></i><span style="font-size:12px;color:#D8E2FF;font-weight:600">Total Pengeluaran</span></div>
+                <div class="tabular" style="font-size:15px;color:#fff;font-weight:800">${fmtHide(expense)}</div>
               </div>
             </div>
           </div>
@@ -215,15 +215,15 @@
       let komposisi = '';
       if (sg.total > 0) {
         const seg = sg.list.map((s, i) => `<div title="${escapeHtml(s.meta.label)}" style="height:100%;width:${(s.value / sg.total * 100).toFixed(2)}%;background:${s.meta.color};${i === 0 ? 'border-radius:999px 0 0 999px;' : ''}${i === sg.list.length - 1 ? 'border-radius:0 999px 999px 0;' : ''}"></div>`).join('');
-        const legend = sg.list.slice(0, 4).map(s => `<div style="display:flex;align-items:center;gap:4.2px;min-width:0;font-size:9.3px;font-weight:600;color:var(--text-muted)"><span style="width:6px;height:6px;border-radius:50%;background:${s.meta.color};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.meta.label)} ${Math.round(s.value / sg.total * 100)}%</span></div>`).join('');
+        const legend = sg.list.slice(0, 4).map(s => `<div style="display:flex;align-items:center;gap:5px;min-width:0;font-size:11px;font-weight:600;color:var(--text-muted)"><span style="width:7px;height:7px;border-radius:50%;background:${s.meta.color};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.meta.label)} ${Math.round(s.value / sg.total * 100)}%</span></div>`).join('');
         komposisi = `
-        <div class="card" style="padding:13.6px;margin-top:17px">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8.5px;margin-bottom:11.9px">
-            <div style="display:flex;align-items:center;gap:8.5px">${iconBubble('pie-chart', '#1A73E8', 32)}<span style="font-size:11.9px;font-weight:700;color:var(--text)">Komposisi Pengeluaran</span></div>
-            <span class="tabular" style="padding:2.5px 8.5px;border-radius:9999px;background:#E8F0FE;color:#1967D2;font-size:9.3px;font-weight:700;white-space:nowrap">${fmtHide(sg.total)} bln ini</span>
+        <div class="card" style="padding:16px;margin-top:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px">${iconBubble('pie-chart', '#1A73E8', 32)}<span style="font-size:14px;font-weight:700;color:var(--text)">Komposisi Pengeluaran</span></div>
+            <span class="tabular" style="padding:3px 10px;border-radius:9999px;background:#E8F0FE;color:#1967D2;font-size:11px;font-weight:700;white-space:nowrap">${fmtHide(sg.total)} bln ini</span>
           </div>
-          <div style="height:8.5px;border-radius:999px;background:var(--surface-raised);overflow:hidden;display:flex;gap:2px">${seg}</div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6.8px 10.2px;margin-top:10.2px">${legend}</div>
+          <div style="height:10px;border-radius:999px;background:var(--surface-raised);overflow:hidden;display:flex;gap:2px">${seg}</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;margin-top:12px">${legend}</div>
         </div>`;
       }
 
@@ -242,48 +242,48 @@
           ? `Budget <b>${escapeHtml(groupMeta(warn.g).label)}</b> sudah terpakai <b style="color:${warna}">${Math.round(warn.s / warn.b * 100)}%</b> (${fmtHide(warn.s)} dari ${fmtHide(warn.b)}).`
           : `Pengeluaran terbesar bulan ini: <b>${escapeHtml(topKat)}</b>, <b style="color:${warna}">${fmtHide(sg.spendCurrent[topKat])}</b> (${topPct}% dari total).`;
         insight = `
-        <div style="margin-top:11.9px;border-radius:15.3px;padding:11.9px 13.6px;display:flex;gap:10.2px;align-items:flex-start;background:${bg}">
-          <div style="width:30.6px;height:30.6px;border-radius:50%;background:${warn ? '#F9AB00' : '#1E8E3E'};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="${warn ? 'alert-triangle' : 'sparkles'}" style="width:15.3px;height:15.3px;color:#fff"></i></div>
+        <div style="margin-top:14px;border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;background:${bg}">
+          <div style="width:36px;height:36px;border-radius:50%;background:${warn ? '#F9AB00' : '#1E8E3E'};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="${warn ? 'alert-triangle' : 'sparkles'}" style="width:18px;height:18px;color:#fff"></i></div>
           <div style="min-width:0;flex:1">
-            <div style="display:flex;justify-content:space-between;margin-bottom:2.5px"><span style="font-size:9.3px;font-weight:800;letter-spacing:0.04em;color:${warna}">INSIGHT KAYA</span><span style="font-size:9.3px;color:var(--text-muted);font-weight:600">Bulan ini</span></div>
-            <div style="font-size:11.9px;line-height:1.45;color:var(--text)">${teks}</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;font-weight:800;letter-spacing:0.04em;color:${warna}">INSIGHT KAYA</span><span style="font-size:11px;color:var(--text-muted);font-weight:600">Bulan ini</span></div>
+            <div style="font-size:14px;line-height:1.45;color:var(--text)">${teks}</div>
           </div>
         </div>`;
       }
 
       const akunLancar = `
         ${temaSecHead('Akun Lancar', 'Dompet', "setTab('aset')")}
-        <div class="horizontal-scroll" style="margin:0 -17px;padding:0 17px 6.8px">
+        <div class="horizontal-scroll" style="margin:0 -20px;padding:0 20px 8px">
           ${asetLancar.map((a, i) => `
-            <div class="card" style="padding:13.6px;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:119px">
-              <div style="height:32.3px;display:flex;align-items:center;justify-content:center">${accIcon(a.name, i, a.type, 38)}</div>
-              <div style="font-size:11px;font-weight:700;color:var(--text);margin-top:8.5px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</div>
-              <div class="tabular" style="font-size:11.9px;font-weight:800;color:var(--text);margin-top:3.4px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(accountBalance(a.name))}</div>
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:140px">
+              <div style="height:38px;display:flex;align-items:center;justify-content:center">${accIcon(a.name, i, a.type, 38)}</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:10px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</div>
+              <div class="tabular" style="font-size:14px;font-weight:800;color:var(--text);margin-top:4px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(accountBalance(a.name))}</div>
             </div>`).join('')}
         </div>`;
 
       // Kantong Impian = target tabungan nyata (sheet Tabungan)
       const kantong = (state.tabungan || []).length === 0 ? '' : `
         ${temaSecHead('Kantong Impian', 'Kelola', "setTab('tabungan')")}
-        <div class="horizontal-scroll" style="margin:0 -17px;padding:0 17px 6.8px">
+        <div class="horizontal-scroll" style="margin:0 -20px;padding:0 20px 8px">
           ${state.tabungan.map(g => {
             const pct = g.target ? Math.min(100, Math.round((g.collected / g.target) * 100)) : 0;
             const warna = pct >= 100 ? '#1E8E3E' : '#1A73E8';
-            return `<div class="card" onclick="setTab('tabungan')" style="padding:13.6px;width:204px;cursor:pointer">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10.2px">${iconBubble('piggy-bank', warna, 34)}<span style="padding:2px 8.5px;border-radius:9999px;background:${warna}1F;color:${warna};font-size:9.3px;font-weight:700">${pct}%</span></div>
-              <div style="font-size:11.9px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.name)}</div>
-              <div class="tabular" style="font-size:13.6px;font-weight:700;color:var(--text);margin-top:3.4px">${fmtRp(g.collected)} <span style="font-size:10.2px;font-weight:500;color:var(--text-muted)">/ ${fmtRpShort(g.target)}</span></div>
-              <div style="height:5.1px;border-radius:999px;background:var(--surface-raised);margin-top:10.2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${warna};border-radius:999px"></div></div>
+            return `<div class="card" onclick="setTab('tabungan')" style="padding:16px;width:240px;cursor:pointer">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">${iconBubble('piggy-bank', warna, 34)}<span style="padding:2px 10px;border-radius:9999px;background:${warna}1F;color:${warna};font-size:11px;font-weight:700">${pct}%</span></div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.name)}</div>
+              <div class="tabular" style="font-size:16px;font-weight:700;color:var(--text);margin-top:4px">${fmtRp(g.collected)} <span style="font-size:12px;font-weight:500;color:var(--text-muted)">/ ${fmtRpShort(g.target)}</span></div>
+              <div style="height:6px;border-radius:999px;background:var(--surface-raised);margin-top:12px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${warna};border-radius:999px"></div></div>
             </div>`;
           }).join('')}
         </div>`;
 
       const aktivitas = `
         ${temaSecHead('Aktivitas Terkini', 'Lihat Semua', "setTab('report')")}
-        ${dates.length === 0 ? '<div style="color:var(--text-muted);font-size:12.8px;padding:20.4px 0;text-align:center">Belum ada transaksi hari ini atau kemarin.</div>' : ''}
+        ${dates.length === 0 ? '<div style="color:var(--text-muted);font-size:15px;padding:24px 0;text-align:center">Belum ada transaksi hari ini atau kemarin.</div>' : ''}
         ${dates.map(date => `
-          <div class="card" style="margin-bottom:11.9px;padding:15.3px 15.3px">
-            <div style="font-size:9.8px;color:var(--text-muted);margin-bottom:8.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtDateLabel(date)}</div>
+          <div class="card" style="margin-bottom:14px;padding:18px 18px">
+            <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtDateLabel(date)}</div>
             ${grouped[date].map(t => txRow(t, false)).join('')}
           </div>`).join('')}`;
 
@@ -295,7 +295,7 @@
       const sg = temaSpendByGroup();
       const bulan = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
       if (sg.total <= 0) {
-        return `<div class="card" style="padding:17px;margin-bottom:17px;text-align:center;color:var(--text-muted);font-size:11.9px;font-weight:500">Belum ada pengeluaran bulan ini.</div>`;
+        return `<div class="card" style="padding:20px;margin-bottom:20px;text-align:center;color:var(--text-muted);font-size:14px;font-weight:500">Belum ada pengeluaran bulan ini.</div>`;
       }
       const R = 78, C = 2 * Math.PI * R, GAP = sg.list.length > 1 ? 3 : 0;
       let acc = 0;
@@ -305,20 +305,20 @@
         acc += (s.value / sg.total) * C;
         return el;
       }).join('');
-      const legend = sg.list.map(s => `<div style="display:flex;align-items:center;gap:5.1px;min-width:0;font-size:10.2px;font-weight:600;color:var(--text-muted)"><span style="width:6.8px;height:6.8px;border-radius:50%;background:${s.meta.color};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.meta.label)}: ${Math.round(s.value / sg.total * 100)}%</span></div>`).join('');
-      return `<div class="card" style="padding:17px 15.3px;margin-bottom:17px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5.1px">
-          <span style="font-size:9.3px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted);text-transform:uppercase">Komposisi Pengeluaran</span>
-          <span style="font-size:10.2px;font-weight:700;color:var(--primary)">${bulan}</span>
+      const legend = sg.list.map(s => `<div style="display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;font-weight:600;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:${s.meta.color};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.meta.label)}: ${Math.round(s.value / sg.total * 100)}%</span></div>`).join('');
+      return `<div class="card" style="padding:20px 18px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted);text-transform:uppercase">Komposisi Pengeluaran</span>
+          <span style="font-size:12px;font-weight:700;color:var(--primary)">${bulan}</span>
         </div>
-        <div style="position:relative;width:161.5px;height:161.5px;margin:6.8px auto 11.9px">
-          <svg viewBox="0 0 200 200" width="100%" height="100%"><circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--surface-raised)" stroke-width="26"/>${arcs}</svg>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32.3px">
-            <span style="font-size:8.5px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">TOTAL BELANJA</span>
-            <span class="tabular" style="font-size:12.8px;font-weight:800;color:var(--text);margin-top:2px;white-space:nowrap">${fmtHide(sg.total)}</span>
+        <div style="position:relative;width:190px;height:190px;margin:8px auto 14px">
+          <svg viewBox="0 0 200 200" width="190" height="190"><circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--surface-raised)" stroke-width="26"/>${arcs}</svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 38px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)">TOTAL BELANJA</span>
+            <span class="tabular" style="font-size:15px;font-weight:800;color:var(--text);margin-top:2px;white-space:nowrap">${fmtHide(sg.total)}</span>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6.8px 10.2px;background:#F8FAFD;border-radius:11.9px;padding:10.2px 11.9px">${legend}</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;background:#F8FAFD;border-radius:14px;padding:12px 14px">${legend}</div>
       </div>`;
     }
     (function () {
@@ -353,13 +353,13 @@
       filtered.forEach(t => { (byDate[t.date] = byDate[t.date] || []).push(t); });
       const dates = Object.keys(byDate).sort().reverse();
       if (dates.length === 0) {
-        return '<div class="card" style="padding:20.4px;text-align:center;color:var(--text-muted);font-size:12.8px;font-weight:500">Tidak ada transaksi ditemukan.</div>';
+        return '<div class="card" style="padding:24px;text-align:center;color:var(--text-muted);font-size:15px;font-weight:500">Tidak ada transaksi ditemukan.</div>';
       }
       return dates.map(date => `
-        <div class="card" style="margin-bottom:11.9px;padding:15.3px 15.3px">
-          <div style="font-size:9.8px;color:var(--text-muted);margin-bottom:8.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtDateLabel(date)}</div>
+        <div class="card" style="margin-bottom:14px;padding:18px 18px">
+          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtDateLabel(date)}</div>
           ${byDate[date].map((t, i) => `
-            <div style="${i > 0 ? 'border-top:1px dashed var(--border);padding-top:5.1px;margin-top:5.1px' : ''}">${txRow(t, true)}</div>`).join('')}
+            <div style="${i > 0 ? 'border-top:1px dashed var(--border);padding-top:6px;margin-top:6px' : ''}">${txRow(t, true)}</div>`).join('')}
         </div>`).join('');
     }
 
@@ -395,36 +395,36 @@
       const kategori = GROUP_ORDER.filter(g => g !== 'LAINNYA' && state.categories.some(c => c.group === g)).map(g => {
         const gm = groupMeta(g);
         const aktif = state.txQuery === gm.label;
-        return `<div onclick="temaPilihKategori('${gm.label}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:61.2px">
-          <div style="padding:2.5px;border-radius:50%;border:2px solid ${aktif ? gm.color : 'transparent'}">${iconBubble(gm.icon, gm.color, 48)}</div>
-          <span style="font-size:9.3px;color:${aktif ? 'var(--text)' : 'var(--text-muted)'};margin-top:5.1px;text-align:center;font-weight:${aktif ? 800 : 600};line-height:1.25">${gm.label}</span>
+        return `<div onclick="temaPilihKategori('${gm.label}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:72px">
+          <div style="padding:3px;border-radius:50%;border:2px solid ${aktif ? gm.color : 'transparent'}">${iconBubble(gm.icon, gm.color, 48)}</div>
+          <span style="font-size:11px;color:${aktif ? 'var(--text)' : 'var(--text-muted)'};margin-top:6px;text-align:center;font-weight:${aktif ? 800 : 600};line-height:1.25">${gm.label}</span>
         </div>`;
       }).join('');
 
       const segBtn = f => {
         const on = state.txFilter === f;
-        return `<button onclick="state.txFilter='${f}';render()" style="flex:1;padding:6.8px 0;border:none;border-radius:8.5px;cursor:pointer;font-size:11px;font-weight:700;background:${on ? 'var(--primary)' : 'transparent'};color:${on ? '#fff' : 'var(--text-muted)'};box-shadow:${on ? '0 2.5px 6.8px -2px rgba(26,115,232,0.45)' : 'none'};transition:0.2s">${f}</button>`;
+        return `<button onclick="state.txFilter='${f}';render()" style="flex:1;padding:8px 0;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;background:${on ? 'var(--primary)' : 'transparent'};color:${on ? '#fff' : 'var(--text-muted)'};box-shadow:${on ? '0 3px 8px -2px rgba(26,115,232,0.45)' : 'none'};transition:0.2s">${f}</button>`;
       };
-      const selStyle = 'flex:1;min-width:0;background:var(--surface-raised);border:none;border-radius:10.2px;padding:7.6px 6.8px;color:var(--text);font-size:16px;font-weight:700;outline:none;cursor:pointer;text-overflow:ellipsis';
+      const selStyle = 'flex:1;min-width:0;background:var(--surface-raised);border:none;border-radius:12px;padding:9px 8px;color:var(--text);font-size:19px;font-weight:700;outline:none;cursor:pointer;text-overflow:ellipsis';
 
       return `
         ${renderFinancialSummary()}
         ${renderLineChart()}
 
         ${temaSecHead('Kategori', '', '')}
-        <div class="horizontal-scroll" style="margin:-3.4px -17px 0;padding:0 17px 6.8px;gap:11.9px">${kategori}</div>
+        <div class="horizontal-scroll" style="margin:-4px -20px 0;padding:0 20px 8px;gap:14px">${kategori}</div>
 
-        <div style="font-size:15.3px;font-weight:700;color:var(--text);letter-spacing:-0.01em;margin:20.4px 0 10.2px">Semua transaksi</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.01em;margin:24px 0 12px">Semua transaksi</div>
 
-        <div class="card" style="padding:10.2px;margin-bottom:11.9px">
-          <div style="display:flex;align-items:center;gap:8.5px;background:var(--surface-raised);border-radius:10.2px;padding:6.8px 10.2px;margin-bottom:8.5px">
-            <i data-lucide="search" style="width:15.3px;height:15.3px;color:var(--violet);flex-shrink:0"></i>
-            <input value="${escapeHtml(state.txQuery)}" oninput="temaCariTx(this.value)" placeholder="Cari transaksi..." style="background:none;border:none;outline:none;color:var(--text);font-size:16px;flex:1;min-width:0;font-weight:600">
+        <div class="card" style="padding:12px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--surface-raised);border-radius:12px;padding:8px 12px;margin-bottom:10px">
+            <i data-lucide="search" style="width:18px;height:18px;color:var(--violet);flex-shrink:0"></i>
+            <input value="${escapeHtml(state.txQuery)}" oninput="temaCariTx(this.value)" placeholder="Cari transaksi..." style="background:none;border:none;outline:none;color:var(--text);font-size:19px;flex:1;min-width:0;font-weight:600">
           </div>
-          <div style="display:flex;gap:3.4px;background:var(--surface-raised);border-radius:11.9px;padding:3.4px;margin-bottom:8.5px">
+          <div style="display:flex;gap:4px;background:var(--surface-raised);border-radius:14px;padding:4px;margin-bottom:10px">
             ${['Semua', 'Masuk', 'Keluar'].map(segBtn).join('')}
           </div>
-          <div style="display:flex;gap:6.8px">
+          <div style="display:flex;gap:8px">
             <select onchange="state.txPeriod=this.value;render()" style="${selStyle}" aria-label="Periode">
               <option value="Semua" ${state.txPeriod === 'Semua' ? 'selected' : ''}>Semua Waktu</option>
               ${months.map(ym => `<option value="${ym}" ${state.txPeriod === ym ? 'selected' : ''}>${temaNamaBulan(ym)}</option>`).join('')}
@@ -460,29 +460,29 @@
       const bulan = now.toLocaleDateString('id-ID', { month: 'long' }).toUpperCase();
 
       const kuota = totalBudget <= 0
-        ? `<div class="card" style="padding:17px;margin-bottom:17px;font-size:11.9px;color:var(--text-muted);font-weight:500;line-height:1.5">Belum ada budget grup. Isi budget di tiap grup di bawah, lalu tekan ikon simpan.</div>`
-        : `<div class="card" style="padding:17px;margin-bottom:17px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8.5px">
-              <span style="display:flex;align-items:center;gap:5.1px;font-size:9.3px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)"><span style="width:6px;height:6px;border-radius:50%;background:var(--primary)"></span>KUOTA BULANAN • ${bulan}</span>
-              <span style="padding:2.5px 8.5px;border-radius:9999px;background:${over ? '#FCE8E6' : '#E6F4EA'};color:${over ? '#C5221F' : '#137333'};font-size:9.3px;font-weight:700">${sisaHari} hari tersisa</span>
+        ? `<div class="card" style="padding:20px;margin-bottom:20px;font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.5">Belum ada budget grup. Isi budget di tiap grup di bawah, lalu tekan ikon simpan.</div>`
+        : `<div class="card" style="padding:20px;margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:0.04em;color:var(--text-muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--primary)"></span>KUOTA BULANAN • ${bulan}</span>
+              <span style="padding:3px 10px;border-radius:9999px;background:${over ? '#FCE8E6' : '#E6F4EA'};color:${over ? '#C5221F' : '#137333'};font-size:11px;font-weight:700">${sisaHari} hari tersisa</span>
             </div>
-            <div class="display tabular" style="font-size:27.2px;font-weight:800;color:${over ? 'var(--coral)' : 'var(--text)'};line-height:1.15">${fmtHide(over ? totalSpent - totalBudget : sisa)}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${over ? 'Melebihi' : 'Sisa'} dari total budget ${fmtHide(totalBudget)}</div>
-            <div style="height:6.8px;border-radius:999px;background:var(--surface-raised);margin:11.9px 0;overflow:hidden"><div style="width:${Math.min(100, pct)}%;height:100%;background:${over ? 'var(--coral)' : (pct >= 80 ? 'var(--amber)' : 'var(--primary)')};border-radius:999px"></div></div>
-            <div style="display:flex;gap:8.5px">
-              <div style="flex:1;background:#F8FAFD;border-radius:11.9px;padding:10.2px">
-                <div style="font-size:9.3px;color:var(--text-muted);font-weight:600">Terpakai (${pct}%)</div>
-                <div class="tabular" style="font-size:12.8px;font-weight:800;color:var(--text);margin-top:2px">${fmtHide(totalSpent)}</div>
+            <div class="display tabular" style="font-size:32px;font-weight:800;color:${over ? 'var(--coral)' : 'var(--text)'};line-height:1.15">${fmtHide(over ? totalSpent - totalBudget : sisa)}</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${over ? 'Melebihi' : 'Sisa'} dari total budget ${fmtHide(totalBudget)}</div>
+            <div style="height:8px;border-radius:999px;background:var(--surface-raised);margin:14px 0;overflow:hidden"><div style="width:${Math.min(100, pct)}%;height:100%;background:${over ? 'var(--coral)' : (pct >= 80 ? 'var(--amber)' : 'var(--primary)')};border-radius:999px"></div></div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;background:#F8FAFD;border-radius:14px;padding:12px">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:600">Terpakai (${pct}%)</div>
+                <div class="tabular" style="font-size:15px;font-weight:800;color:var(--text);margin-top:2px">${fmtHide(totalSpent)}</div>
               </div>
-              <div style="flex:1;background:#F8FAFD;border-radius:11.9px;padding:10.2px">
-                <div style="font-size:9.3px;color:var(--text-muted);font-weight:600">Rekomendasi aman</div>
-                <div class="tabular" style="font-size:12.8px;font-weight:800;color:var(--emerald);margin-top:2px">${over ? '-' : fmtHide(Math.round(sisa / sisaHari)) + '/hari'}</div>
+              <div style="flex:1;background:#F8FAFD;border-radius:14px;padding:12px">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:600">Rekomendasi aman</div>
+                <div class="tabular" style="font-size:15px;font-weight:800;color:var(--emerald);margin-top:2px">${over ? '-' : fmtHide(Math.round(sisa / sisaHari)) + '/hari'}</div>
               </div>
             </div>
           </div>`;
 
       return `
-        <div style="font-size:11.9px;color:var(--text-muted);margin-bottom:13.6px;font-weight:500;line-height:1.5">Atur batas pengeluaran grup untuk bulan ini. Tekan ikon simpan setelah mengubah.</div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;font-weight:500;line-height:1.5">Atur batas pengeluaran grup untuk bulan ini. Tekan ikon simpan setelah mengubah.</div>
         ${kuota}
         ${renderGroupBudgetGroups(spendCurrent, spendPrev, true)}
       `;
@@ -497,9 +497,9 @@
     (function () {
       const st = document.createElement('style');
       st.textContent = `
-        :root { --bar-drop: 13.6px; }
+        :root { --bar-drop: 16px; }
         #appbar { padding-top: calc(env(safe-area-inset-top, 0px) + var(--bar-drop)); background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; }
-        #screen { padding-top: calc(68px + var(--bar-drop) + env(safe-area-inset-top, 0px)); }
+        #screen { padding-top: calc(80px + var(--bar-drop) + env(safe-area-inset-top, 0px)); }
       `;
       document.head.appendChild(st);
     })();
@@ -518,8 +518,8 @@
       ['rdn', ['#3C4043', '#16181B']], ['stockbit', ['#3C4043', '#16181B']],
       ['tunai', ['#1E8E3E', '#0F5C28']], ['cash', ['#1E8E3E', '#0F5C28']]
     ];
-    const TEMA_KARTU_H = 167;   // tinggi kartu (px)
-    const TEMA_KARTU_GAP = 24;  // tinggi pita kartu yang mengintip (px)
+    const TEMA_KARTU_H = 196;   // tinggi kartu (px)
+    const TEMA_KARTU_GAP = 28;  // tinggi pita kartu yang mengintip (px)
     const TEMA_KARTU_EASE = 'transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease';
 
     function temaKartuWarna(a) {
@@ -677,33 +677,33 @@
       const w = temaKartuWarna(a);
       const p = temaKartuPos((i - f + n) % n, n);
       const adaChip = temaKartuJenis(a) !== 'TUNAI';
-      const chip = adaChip ? `<div style="width:37.4px;height:27.2px;border-radius:6.8px;background:linear-gradient(135deg,#FEF7E0,#F9AB00 55%,#B06000);border:1px solid rgba(176,96,0,0.35);position:relative;overflow:hidden">
+      const chip = adaChip ? `<div style="width:44px;height:32px;border-radius:8px;background:linear-gradient(135deg,#FEF7E0,#F9AB00 55%,#B06000);border:1px solid rgba(176,96,0,0.35);position:relative;overflow:hidden">
           <div style="position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(176,96,0,0.4)"></div>
           <div style="position:absolute;top:0;bottom:0;left:33%;width:1px;background:rgba(176,96,0,0.4)"></div>
           <div style="position:absolute;top:0;bottom:0;right:33%;width:1px;background:rgba(176,96,0,0.4)"></div>
-        </div>` : '<div style="height:27.2px"></div>';
-      return `<div data-i="${i}" style="position:absolute;left:0;right:0;top:0;height:${TEMA_KARTU_H}px;transform-origin:50% 0;transform:${p.t};opacity:${p.o};z-index:${p.z};pointer-events:${p.o ? 'auto' : 'none'};transition:${TEMA_KARTU_EASE};will-change:transform;border-radius:23.8px;overflow:hidden;color:#fff;cursor:pointer;background:linear-gradient(135deg,${w[0]} 0%,${w[0]} 35%,${w[1]} 100%);box-shadow:0 11.9px 23.8px -8.5px ${w[1]}99;border:1px solid rgba(255,255,255,0.25)">
-        <div style="position:absolute;right:-40.8px;bottom:-40.8px;width:149.6px;height:149.6px;border-radius:50%;background:rgba(255,255,255,0.14)"></div>
-        <div style="position:absolute;left:-40.8px;top:-40.8px;width:122.4px;height:122.4px;border-radius:50%;background:rgba(147,197,253,0.28)"></div>
-        <div class="aset-peek" style="position:absolute;left:15.3px;right:15.3px;top:6px;display:flex;justify-content:space-between;gap:8.5px;opacity:${p.label};transition:opacity .3s ease">
-          <span style="font-size:9.3px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span>
-          <span class="tabular" style="font-size:9.3px;font-weight:700;white-space:nowrap;opacity:0.9">${fmtHide(accountBalance(a.name))}</span>
+        </div>` : '<div style="height:32px"></div>';
+      return `<div data-i="${i}" style="position:absolute;left:0;right:0;top:0;height:${TEMA_KARTU_H}px;transform-origin:50% 0;transform:${p.t};opacity:${p.o};z-index:${p.z};pointer-events:${p.o ? 'auto' : 'none'};transition:${TEMA_KARTU_EASE};will-change:transform;border-radius:28px;overflow:hidden;color:#fff;cursor:pointer;background:linear-gradient(135deg,${w[0]} 0%,${w[0]} 35%,${w[1]} 100%);box-shadow:0 14px 28px -10px ${w[1]}99;border:1px solid rgba(255,255,255,0.25)">
+        <div style="position:absolute;right:-48px;bottom:-48px;width:176px;height:176px;border-radius:50%;background:rgba(255,255,255,0.14)"></div>
+        <div style="position:absolute;left:-48px;top:-48px;width:144px;height:144px;border-radius:50%;background:rgba(147,197,253,0.28)"></div>
+        <div class="aset-peek" style="position:absolute;left:18px;right:18px;top:7px;display:flex;justify-content:space-between;gap:10px;opacity:${p.label};transition:opacity .3s ease">
+          <span style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span>
+          <span class="tabular" style="font-size:11px;font-weight:700;white-space:nowrap;opacity:0.9">${fmtHide(accountBalance(a.name))}</span>
         </div>
-        <div class="aset-main" style="position:relative;z-index:1;height:100%;padding:17px;display:flex;flex-direction:column;justify-content:space-between;opacity:${p.main};transition:opacity .3s ease">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8.5px">
-            <div style="display:flex;align-items:center;gap:8.5px;min-width:0">
-              <div style="background:#fff;border-radius:10.2px;padding:3.4px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${accIcon(a.name, i, a.type, 30)}</div>
-              <span style="font-size:13.6px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span>
+        <div class="aset-main" style="position:relative;z-index:1;height:100%;padding:20px;display:flex;flex-direction:column;justify-content:space-between;opacity:${p.main};transition:opacity .3s ease">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              <div style="background:#fff;border-radius:12px;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${accIcon(a.name, i, a.type, 30)}</div>
+              <span style="font-size:16px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:5.1px;flex-shrink:0;opacity:0.95">
-              <i data-lucide="wifi" style="width:15.3px;height:15.3px;transform:rotate(90deg)"></i>
-              <span style="font-size:9.3px;font-weight:800;letter-spacing:0.08em">${temaKartuJenis(a)}</span>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;opacity:0.95">
+              <i data-lucide="wifi" style="width:18px;height:18px;transform:rotate(90deg)"></i>
+              <span style="font-size:11px;font-weight:800;letter-spacing:0.08em">${temaKartuJenis(a)}</span>
             </div>
           </div>
           ${chip}
           <div>
-            <div style="font-size:8.5px;font-weight:700;letter-spacing:0.08em;opacity:0.75">SALDO</div>
-            <div class="display tabular" style="font-size:23.8px;font-weight:800;letter-spacing:-0.02em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(accountBalance(a.name))}</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;opacity:0.75">SALDO</div>
+            <div class="display tabular" style="font-size:28px;font-weight:800;letter-spacing:-0.02em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtHide(accountBalance(a.name))}</div>
           </div>
         </div>
       </div>`;
@@ -717,11 +717,11 @@
       if (f >= n) f = 0;
       window._asetFront = f;
       const tinggi = Math.min(n - 1, 2) * TEMA_KARTU_GAP + TEMA_KARTU_H;
-      const dots = n > 1 ? `<div style="display:flex;justify-content:center;align-items:center;margin-top:8.5px">
-          ${list.map((x, i) => `<button onclick="asetSet(${i})" aria-label="${escapeHtml(x.name)}" style="background:none;border:none;padding:6.8px 3.4px;cursor:pointer"><span class="aset-dot" data-i="${i}" style="display:block;height:5.1px;width:${i === f ? 18 : 6}px;border-radius:999px;background:${i === f ? 'var(--primary)' : 'var(--border)'};transition:width .3s ease,background .3s ease"></span></button>`).join('')}
+      const dots = n > 1 ? `<div style="display:flex;justify-content:center;align-items:center;margin-top:10px">
+          ${list.map((x, i) => `<button onclick="asetSet(${i})" aria-label="${escapeHtml(x.name)}" style="background:none;border:none;padding:8px 4px;cursor:pointer"><span class="aset-dot" data-i="${i}" style="display:block;height:6px;width:${i === f ? 18 : 6}px;border-radius:999px;background:${i === f ? 'var(--primary)' : 'var(--border)'};transition:width .3s ease,background .3s ease"></span></button>`).join('')}
         </div>
-        <div style="text-align:center;font-size:9.8px;color:var(--text-muted);font-weight:600;margin-top:-2px">Geser kartu untuk berganti akun</div>` : '';
-      return `<div style="margin-bottom:20.4px">
+        <div style="text-align:center;font-size:11.5px;color:var(--text-muted);font-weight:600;margin-top:-2px">Geser kartu untuk berganti akun</div>` : '';
+      return `<div style="margin-bottom:24px">
         <div id="aset-deck" onpointerdown="asetDown(event)" onpointermove="asetMove(event)" onpointerup="asetUp(event)" onpointercancel="asetCancel()" style="position:relative;height:${tinggi}px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none">
           ${list.map((a, i) => temaKartuHtml(a, i, n, f)).join('')}
         </div>

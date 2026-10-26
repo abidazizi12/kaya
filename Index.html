@@ -31,10 +31,10 @@
       --hero-gradient: linear-gradient(135deg, #1A73E8 0%, #1967D2 55%, #0B57D0 100%);
       --mint: #34A853; --sky: #4285F4; --pink: #D93025; --amber: #F9AB00; --emerald: #1E8E3E; --coral: #EA4335;
       --text: #1F1F1F; --text-muted: #5F6368;
-      --card-shadow: 0 3.4px 17px -2px rgba(26,115,232,0.05), 0 1px 2.5px rgba(60,64,67,0.08);
+      --card-shadow: 0 4px 20px -2px rgba(26,115,232,0.05), 0 1px 3px rgba(60,64,67,0.08);
       --card-border: rgba(218,220,224,0.6);
       /* Seberapa jauh menu bawah & tombol + diturunkan (px). Perbesar kalau masih tertutup blur Safari. */
-      --nav-drop: 5.1px;
+      --nav-drop: 6px;
     }
     * { box-sizing: border-box; }
     
@@ -53,7 +53,7 @@
     }
     
     #frame { 
-      max-width: 459px; 
+      max-width: 540px; 
       width: 100%; 
       margin: 0 auto; 
       background: var(--bg); 
@@ -63,7 +63,7 @@
     }
     
     #screen { 
-      padding: calc(68px + env(safe-area-inset-top, 0px)) 17px calc(93.5px + env(safe-area-inset-bottom, 0px)); 
+      padding: calc(80px + env(safe-area-inset-top, 0px)) 20px calc(110px + env(safe-area-inset-bottom, 0px)); 
       min-height: 100vh; 
       position: relative; 
       z-index: 1; 
@@ -75,7 +75,7 @@
     .tabular { font-variant-numeric: tabular-nums lining-nums; }
     ::-webkit-scrollbar { display: none; }
     
-    input, textarea, select { font-family: inherit; font-size: 16px; touch-action: manipulation; }
+    input, textarea, select { font-family: inherit; font-size: 19px; touch-action: manipulation; }
     button { font-family: inherit; touch-action: manipulation; }
     
     .icon-bubble { display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
@@ -83,79 +83,79 @@
     /* ===== Logo KAYA (satu gaya di semua tempat): kotak biru + huruf K putih ===== */
     .kaya-mark { display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #1A73E8 0%, #0B57D0 100%); color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
     
-    .horizontal-scroll { display: flex; overflow-x: auto; gap: 10.2px; padding-bottom: 6.8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .horizontal-scroll { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .horizontal-scroll::-webkit-scrollbar { display: none; }
     .horizontal-scroll > * { scroll-snap-align: start; flex-shrink: 0; }
 
     /* Chip / filter pill: aktif = biru + glow */
-    .chip { flex-shrink: 0; padding: 8.5px 15.3px; border-radius: 9999px; font-size: 11.5px; font-weight: 600; cursor: pointer; border: 1px solid #E8EAED; background: #F8FAFD; color: var(--text-muted); transition: 0.2s; }
-    .chip.active { border-color: transparent; background: var(--primary); color: white; box-shadow: 0 3.4px 10.2px -2px rgba(26,115,232,0.4); }
+    .chip { flex-shrink: 0; padding: 10px 18px; border-radius: 9999px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: 1px solid #E8EAED; background: #F8FAFD; color: var(--text-muted); transition: 0.2s; }
+    .chip.active { border-color: transparent; background: var(--primary); color: white; box-shadow: 0 4px 12px -2px rgba(26,115,232,0.4); }
     
-    .row { display: flex; align-items: center; gap: 11.9px; padding: 10.2px 3.4px; }
-    .card { background: var(--surface); border-radius: 15.3px; box-shadow: var(--card-shadow); border: 1px solid var(--card-border); transition: transform 0.2s cubic-bezier(0.2,0,0,1); }
+    .row { display: flex; align-items: center; gap: 14px; padding: 12px 4px; }
+    .card { background: var(--surface); border-radius: 18px; box-shadow: var(--card-shadow); border: 1px solid var(--card-border); transition: transform 0.2s cubic-bezier(0.2,0,0,1); }
     
     /* Tombol utama: pill biru */
-    .btn-primary { width: 100%; margin-top: 13.6px; background-color: var(--primary); background-image: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0.04) 100%); border: none; border-radius: 9999px; padding: 13.6px 0; color: #FFFFFF; font-weight: 700; font-size: 13.6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8.5px; box-shadow: 0 6.8px 15.3px -5.1px rgba(26,115,232,0.55); transition: 0.2s; }
+    .btn-primary { width: 100%; margin-top: 16px; background-color: var(--primary); background-image: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0.04) 100%); border: none; border-radius: 9999px; padding: 16px 0; color: #FFFFFF; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 18px -6px rgba(26,115,232,0.55); transition: 0.2s; }
     .btn-primary:active { transform: scale(0.98); }
-    .field-input { width: 100%; background: #F8FAFD; border: 1px solid #E8EAED; border-radius: 13.6px; padding: 11.9px 13.6px; color: var(--text); outline: none; font-weight: 600; transition: 0.2s; -webkit-appearance: none; appearance: none; font-size: 16px; }
+    .field-input { width: 100%; background: #F8FAFD; border: 1px solid #E8EAED; border-radius: 16px; padding: 14px 16px; color: var(--text); outline: none; font-weight: 600; transition: 0.2s; -webkit-appearance: none; appearance: none; font-size: 19px; }
     .field-input:focus { background: #FFFFFF; border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
-    .field-label { font-size: 9.8px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-muted); margin: 13.6px 0 6.8px; display: block; text-transform: uppercase; cursor: pointer; padding-left: 2px; }
+    .field-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-muted); margin: 16px 0 8px; display: block; text-transform: uppercase; cursor: pointer; padding-left: 2px; }
     
     #splash-screen { position: fixed; inset: 0; z-index: 9999; background: var(--hero-gradient); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; opacity: 1; visibility: visible; }
     /* Lingkaran dekoratif, sama dengan kartu saldo di Beranda */
-    #splash-screen::before { content: ''; position: absolute; top: -59.5px; right: -59.5px; width: 221px; height: 221px; border-radius: 50%; background: rgba(255,255,255,0.10); }
-    #splash-screen::after { content: ''; position: absolute; bottom: -51px; left: -51px; width: 187px; height: 187px; border-radius: 50%; background: rgba(134,248,152,0.14); }
+    #splash-screen::before { content: ''; position: absolute; top: -70px; right: -70px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,0.10); }
+    #splash-screen::after { content: ''; position: absolute; bottom: -60px; left: -60px; width: 220px; height: 220px; border-radius: 50%; background: rgba(134,248,152,0.14); }
     /* Isi splash tetap di atas lingkaran */
     #splash-screen > * { position: relative; z-index: 1; }
     #splash-screen.fade-out { opacity: 0; visibility: hidden; }
-    .splash-logo-box { width: 76.5px; height: 76.5px; border-radius: 23.8px; font-size: 39.1px; border: 2.5px solid rgba(255,255,255,0.9); box-shadow: 0 17px 34px -8.5px rgba(11,87,208,0.6); }
-    .spinner-ring { width: 23.8px; height: 23.8px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 23.8px; }
+    .splash-logo-box { width: 90px; height: 90px; border-radius: 28px; font-size: 46px; border: 3px solid rgba(255,255,255,0.9); box-shadow: 0 20px 40px -10px rgba(11,87,208,0.6); }
+    .spinner-ring { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 28px; }
 
     /* ===== App bar atas (diisi JS_Tema: renderAppbar) ===== */
-    #appbar { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 459px; z-index: 90; background: rgba(255,255,255,0.86); backdrop-filter: blur(15.3px); -webkit-backdrop-filter: blur(15.3px); box-shadow: 0 1px 6.8px rgba(0,0,0,0.04); padding-top: env(safe-area-inset-top, 0px); }
-    .appbar-in { height: 54.4px; padding: 0 10.2px 0 17px; display: flex; align-items: center; justify-content: space-between; gap: 6.8px; }
-    .appbar-left { display: flex; align-items: center; gap: 8.5px; min-width: 0; }
-    .appbar-logo { width: 30.6px; height: 30.6px; border-radius: 10.2px; background: linear-gradient(135deg, #1A73E8 0%, #0B57D0 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: -0.03em; flex-shrink: 0; box-shadow: 0 3.4px 8.5px -2.5px rgba(26,115,232,0.5); }
-    .appbar-sub { font-size: 10.2px; font-weight: 500; color: var(--text-muted); line-height: 1.2; }
-    .appbar-title { font-size: 15.3px; font-weight: 700; color: var(--text); line-height: 1.25; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #appbar { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 540px; z-index: 90; background: rgba(255,255,255,0.86); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 1px 8px rgba(0,0,0,0.04); padding-top: env(safe-area-inset-top, 0px); }
+    .appbar-in { height: 64px; padding: 0 12px 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .appbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .appbar-logo { width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, #1A73E8 0%, #0B57D0 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 19px; letter-spacing: -0.03em; flex-shrink: 0; box-shadow: 0 4px 10px -3px rgba(26,115,232,0.5); }
+    .appbar-sub { font-size: 12px; font-weight: 500; color: var(--text-muted); line-height: 1.2; }
+    .appbar-title { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.25; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .appbar-right { display: flex; align-items: center; flex-shrink: 0; }
-    .appbar-btn { width: 37.4px; height: 37.4px; border-radius: 50%; border: none; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); position: relative; }
+    .appbar-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); position: relative; }
     .appbar-btn:active { background: var(--surface-raised); }
-    .appbar-dot { position: absolute; top: 7.6px; right: 7.6px; min-width: 13.6px; height: 13.6px; padding: 0 3.4px; border-radius: 6.8px; background: var(--coral); color: #fff; font-size: 8.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .appbar-dot { position: absolute; top: 9px; right: 9px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--coral); color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 
     /* ===== Navigasi bawah: diturunkan sedikit (--nav-drop) supaya tidak bentrok dengan blur toolbar Safari ===== */
-    #bottomnav { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(-1 * var(--nav-drop)); width: 100%; max-width: 459px; height: calc(54.4px + env(safe-area-inset-bottom, 0px)); padding: 0 3.4px env(safe-area-inset-bottom, 0px); background: rgba(255,255,255,0.94); backdrop-filter: blur(15.3px); -webkit-backdrop-filter: blur(15.3px); display: flex; align-items: stretch; border-radius: 17px 17px 0 0; box-shadow: 0 -3.4px 17px rgba(0,0,0,0.05); z-index: 100; }
+    #bottomnav { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(-1 * var(--nav-drop)); width: 100%; max-width: 540px; height: calc(64px + env(safe-area-inset-bottom, 0px)); padding: 0 4px env(safe-area-inset-bottom, 0px); background: rgba(255,255,255,0.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: flex; align-items: stretch; border-radius: 20px 20px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 100; }
     /* Warna aktif tiap tab diatur lewat variabel --c (warna) dan --cbg (latar) dari JS_Tema */
-    .navbtn { --c: var(--primary); --cbg: var(--violet-soft); flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--text-muted); padding: 3.4px 0; transition: 0.2s; }
+    .navbtn { --c: var(--primary); --cbg: var(--violet-soft); flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--text-muted); padding: 4px 0; transition: 0.2s; }
     .navbtn.active { color: var(--c); }
     .navbtn.active .navdot { background: var(--cbg); }
     .navbtn.active .navdot i, .navbtn.active .navdot svg { stroke-width: 2.6; }
-    .navdot { width: 37.4px; height: 23.8px; border-radius: 11.9px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-    .navbtn span { font-size: 9.3px; font-weight: 700; }
+    .navdot { width: 44px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .navbtn span { font-size: 11px; font-weight: 700; }
     
-    #overlay { position: fixed; inset: 0; background: rgba(32,33,36,0.5); display: none; align-items: flex-end; justify-content: center; z-index: 200; backdrop-filter: blur(2.5px); pointer-events: auto; }
+    #overlay { position: fixed; inset: 0; background: rgba(32,33,36,0.5); display: none; align-items: flex-end; justify-content: center; z-index: 200; backdrop-filter: blur(3px); pointer-events: auto; }
     #overlay.show { display: flex; }
-    #sheet { width: 100%; max-width: 459px; background: var(--bg); border-top-left-radius: 23.8px; border-top-right-radius: 23.8px; padding: 20.4px 17px 27.2px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1); pointer-events: auto; box-shadow: 0 -10.2px 27.2px -3.4px rgba(32,33,36,0.12); }
+    #sheet { width: 100%; max-width: 540px; background: var(--bg); border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 24px 20px 32px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1); pointer-events: auto; box-shadow: 0 -12px 32px -4px rgba(32,33,36,0.12); }
     #overlay.show #sheet { transform: translateY(0); }
     
-    #fab-backdrop { position: fixed; inset: 0; background: rgba(32, 33, 36, 0.6); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(3.4px); }
+    #fab-backdrop { position: fixed; inset: 0; background: rgba(32, 33, 36, 0.6); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px); }
     #fab-backdrop.show { opacity: 1; pointer-events: auto; }
-    #fab-container { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(22.1px - var(--nav-drop) + env(safe-area-inset-bottom, 0px)); z-index: 151; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+    #fab-container { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(26px - var(--nav-drop) + env(safe-area-inset-bottom, 0px)); z-index: 151; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
     
-    #fab-menu { display: flex; flex-direction: column; gap: 11.9px; margin-bottom: 17px; opacity: 0; pointer-events: none; transform: translateY(17px) scale(0.95); transition: all 0.3s cubic-bezier(0.2, 0, 0, 1); align-items: flex-end; width: 204px; }
+    #fab-menu { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.2, 0, 0, 1); align-items: flex-end; width: 240px; }
     #fab-menu.show { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-    .fab-item { display: flex; align-items: center; justify-content: flex-end; gap: 11.9px; cursor: pointer; width: 100%; }
-    .fab-label { background: rgba(32, 33, 36, 0.95); color: white; padding: 6.8px 13.6px; border-radius: 9999px; font-size: 11.9px; font-weight: 700; box-shadow: 0 3.4px 8.5px rgba(0,0,0,0.2); }
-    .fab-btn { width: 40.8px; height: 40.8px; border-radius: 20.4px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 5.1px 10.2px rgba(0,0,0,0.2); }
+    .fab-item { display: flex; align-items: center; justify-content: flex-end; gap: 14px; cursor: pointer; width: 100%; }
+    .fab-label { background: rgba(32, 33, 36, 0.95); color: white; padding: 8px 16px; border-radius: 9999px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .fab-btn { width: 48px; height: 48px; border-radius: 24px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
     
-    #fab { width: 47.6px; height: 47.6px; border-radius: 23.8px; background: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8.5px 18.7px -5.1px rgba(26,115,232,0.65); transition: all 0.3s cubic-bezier(0.2, 0, 0, 1); pointer-events: auto; }
+    #fab { width: 56px; height: 56px; border-radius: 28px; background: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 22px -6px rgba(26,115,232,0.65); transition: all 0.3s cubic-bezier(0.2, 0, 0, 1); pointer-events: auto; }
     #fab.open { background: var(--primary-dark); transform: rotate(45deg); }
 
-    #loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--text-muted); font-size: 12.8px; font-weight:600; }
-    .err { color: #D93025; font-size: 11.9px; margin-top: 8.5px; font-weight: 600; }
+    #loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--text-muted); font-size: 15px; font-weight:600; }
+    .err { color: #D93025; font-size: 14px; margin-top: 10px; font-weight: 600; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     
-    #toast { position: fixed; bottom: calc(81.6px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(17px); background: rgba(32,33,36,0.94); color: white; padding: 10.2px 20.4px; border-radius: 20.4px; font-size: 11.9px; font-weight: 700; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; box-shadow: 0 6.8px 13.6px rgba(0,0,0,0.2); white-space:nowrap; }
+    #toast { position: fixed; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(32,33,36,0.94); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 700; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 9999; box-shadow: 0 8px 16px rgba(0,0,0,0.2); white-space:nowrap; }
     /* ===== Skala tampilan 85% tanpa Worker =====
        Ubah angka --ui-zoom untuk mengatur ukuran (1 = ukuran asli, 0.9 = sedikit lebih besar). */
     :root { --ui-zoom: 0.85; }
@@ -169,7 +169,7 @@
 <body>
   <div id="splash-screen">
     <div class="splash-logo-box kaya-mark">K</div>
-    <div class="display" style="color:white;font-size:25.5px;font-weight:800;margin-top:15.3px;letter-spacing:0.5px">KAYA</div>
+    <div class="display" style="color:white;font-size:30px;font-weight:800;margin-top:18px;letter-spacing:0.5px">KAYA</div>
     <div class="spinner-ring"></div>
   </div>
 
@@ -182,27 +182,27 @@
       <div id="fab-menu">
         <div class="fab-item" onclick="triggerFabAction('tabungan')">
           <span class="fab-label">Tabungan</span>
-          <button class="fab-btn" style="background: var(--mint)"><i data-lucide="piggy-bank" style="color:white;width:20.4px;height:20.4px;stroke-width:2.5"></i></button>
+          <button class="fab-btn" style="background: var(--mint)"><i data-lucide="piggy-bank" style="color:white;width:24px;height:24px;stroke-width:2.5"></i></button>
         </div>
         <div class="fab-item" onclick="triggerFabAction('hutang')">
           <span class="fab-label">Hutang & Cicilan</span>
-          <button class="fab-btn" style="background: var(--amber)"><i data-lucide="scroll-text" style="color:white;width:20.4px;height:20.4px;stroke-width:2.5"></i></button>
+          <button class="fab-btn" style="background: var(--amber)"><i data-lucide="scroll-text" style="color:white;width:24px;height:24px;stroke-width:2.5"></i></button>
         </div>
         <div class="fab-item" onclick="triggerFabAction('transfer')">
           <span class="fab-label">Transfer/Bayar</span>
-          <button class="fab-btn" style="background: var(--sky)"><i data-lucide="arrow-right-left" style="color:white;width:20.4px;height:20.4px;stroke-width:2.5"></i></button>
+          <button class="fab-btn" style="background: var(--sky)"><i data-lucide="arrow-right-left" style="color:white;width:24px;height:24px;stroke-width:2.5"></i></button>
         </div>
         <div class="fab-item" onclick="triggerFabAction('pengeluaran')">
           <span class="fab-label">Pengeluaran</span>
-          <button class="fab-btn" style="background: var(--coral)"><i data-lucide="minus" style="color:white;width:20.4px;height:20.4px;stroke-width:3"></i></button>
+          <button class="fab-btn" style="background: var(--coral)"><i data-lucide="minus" style="color:white;width:24px;height:24px;stroke-width:3"></i></button>
         </div>
         <div class="fab-item" onclick="triggerFabAction('pemasukan')">
           <span class="fab-label">Pemasukan</span>
-          <button class="fab-btn" style="background: var(--emerald)"><i data-lucide="plus" style="color:white;width:20.4px;height:20.4px;stroke-width:3"></i></button>
+          <button class="fab-btn" style="background: var(--emerald)"><i data-lucide="plus" style="color:white;width:24px;height:24px;stroke-width:3"></i></button>
         </div>
       </div>
       <button id="fab" onclick="toggleFab()" aria-label="Catat transaksi">
-        <i data-lucide="plus" id="fab-icon" stroke="#ffffff" style="width:23.8px;height:23.8px;stroke-width:3"></i>
+        <i data-lucide="plus" id="fab-icon" stroke="#ffffff" style="width:28px;height:28px;stroke-width:3"></i>
       </button>
     </div>
 

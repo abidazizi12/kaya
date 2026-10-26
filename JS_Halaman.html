@@ -12,13 +12,13 @@
         const m = accMeta(a.name, i, a.type); 
         const bal = accountBalance(a.name); 
         return `
-          <div class="card" style="padding:15.3px 13.6px; width:123.2px; flex-shrink:0; display:flex; flex-direction:column; border-top: 3.4px solid ${m.color}">
-             <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8.5px;margin-bottom:13.6px">
+          <div class="card" style="padding:18px 16px; width:145px; flex-shrink:0; display:flex; flex-direction:column; border-top: 4px solid ${m.color}">
+             <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:16px">
                 ${accIcon(a.name, i, a.type, 38)}
-                <div style="font-size:11.9px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${escapeHtml(a.name)}</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${escapeHtml(a.name)}</div>
              </div>
-             <div style="font-size:9.3px;color:var(--text-muted);font-weight:700;margin-bottom:3.4px">SALDO</div>
-             <div class="tabular" style="font-size:13.6px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${fmtHide(bal)}</div>
+             <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px">SALDO</div>
+             <div class="tabular" style="font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${fmtHide(bal)}</div>
           </div>`; 
       }).join('');
 
@@ -30,24 +30,24 @@
         const pct = limit > 0 ? Math.min((tagihan / limit) * 100, 100) : (tagihan > 0 ? 100 : 0);
         
         return `
-          <div class="card" onclick="openCCDetail('${escapeHtml(a.name)}')" style="padding:17px; width:255px; flex-shrink:0; cursor:pointer; display:flex; flex-direction:column; border-top: 3.4px solid ${m.color}">
-            <div style="display:flex;align-items:center;gap:10.2px;margin-bottom:13.6px">
+          <div class="card" onclick="openCCDetail('${escapeHtml(a.name)}')" style="padding:20px; width:300px; flex-shrink:0; cursor:pointer; display:flex; flex-direction:column; border-top: 4px solid ${m.color}">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
               ${accIcon(a.name, i, a.type, 42)}
               <div style="flex:1;min-width:0">
-                <div style="font-size:12.8px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</div>
+                <div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(a.name)}</div>
               </div>
             </div>
-            <div style="height:6.8px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:10.2px">
+            <div style="height:8px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:12px">
                <div style="width:${pct}%;height:100%;background:${pct > 80 ? 'var(--coral)' : 'var(--violet)'};border-radius:999px"></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:flex-end;">
                <div>
-                  <div style="font-size:9.3px;color:var(--text-muted);font-weight:700;margin-bottom:2px">TAGIHAN</div>
-                  <div class="tabular" style="font-size:13.6px;font-weight:800;color:var(--coral)">${fmtHide(tagihan)}</div>
+                  <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:2px">TAGIHAN</div>
+                  <div class="tabular" style="font-size:16px;font-weight:800;color:var(--coral)">${fmtHide(tagihan)}</div>
                </div>
                <div style="text-align:right">
-                  <div style="font-size:9.3px;color:var(--text-muted);font-weight:700;margin-bottom:2px">SISA LIMIT</div>
-                  <div class="tabular" style="font-size:13.6px;font-weight:800;color:var(--emerald)">${limit > 0 ? fmtHide(sisa) : '-'}</div>
+                  <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:2px">SISA LIMIT</div>
+                  <div class="tabular" style="font-size:16px;font-weight:800;color:var(--emerald)">${limit > 0 ? fmtHide(sisa) : '-'}</div>
                </div>
             </div>
           </div>`; 
@@ -55,47 +55,47 @@
       
       return `
         ${screenHeader('Aset & Portofolio', true)}
-        <div style="border-radius:23.8px;padding:22.1px;margin-bottom:18.7px;background:var(--hero-gradient);box-shadow:0 13.6px 25.5px -11.9px rgba(20,39,78,0.5)">
-          <div style="color:rgba(255,255,255,0.85);font-size:11.9px;font-weight:700;letter-spacing:0.5px">TOTAL KEKAYAAN BERSIH</div>
-          <div class="display tabular" style="color:white;font-size:32.3px;font-weight:800;margin-top:6.8px;margin-bottom:17px">${fmtHide(grandTotal)}</div>
-          <div style="display:flex;gap:11.9px;border-top:1px solid rgba(255,255,255,0.25);padding-top:11.9px">
+        <div style="border-radius:28px;padding:26px;margin-bottom:22px;background:var(--hero-gradient);box-shadow:0 16px 30px -14px rgba(20,39,78,0.5)">
+          <div style="color:rgba(255,255,255,0.85);font-size:14px;font-weight:700;letter-spacing:0.5px">TOTAL KEKAYAAN BERSIH</div>
+          <div class="display tabular" style="color:white;font-size:38px;font-weight:800;margin-top:8px;margin-bottom:20px">${fmtHide(grandTotal)}</div>
+          <div style="display:flex;gap:14px;border-top:1px solid rgba(255,255,255,0.25);padding-top:14px">
             <div style="flex:1">
-              <div style="color:rgba(255,255,255,0.8);font-size:10.2px;font-weight:700">ASET LANCAR</div>
-              <div class="tabular" style="color:white;font-size:15.3px;font-weight:800">${fmtHide(totalLancar)}</div>
+              <div style="color:rgba(255,255,255,0.8);font-size:12px;font-weight:700">ASET LANCAR</div>
+              <div class="tabular" style="color:white;font-size:18px;font-weight:800">${fmtHide(totalLancar)}</div>
             </div>
             <div style="flex:1">
-              <div style="color:rgba(255,255,255,0.8);font-size:10.2px;font-weight:700">INVESTASI</div>
-              <div class="tabular" style="color:white;font-size:15.3px;font-weight:800">${fmtHide(totalInvestasi)}</div>
+              <div style="color:rgba(255,255,255,0.8);font-size:12px;font-weight:700">INVESTASI</div>
+              <div class="tabular" style="color:white;font-size:18px;font-weight:800">${fmtHide(totalInvestasi)}</div>
             </div>
           </div>
         </div>
         
-        <div style="font-size:13.6px;font-weight:800;color:var(--text);margin:20.4px 0 10.2px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin:24px 0 12px;display:flex;justify-content:space-between;align-items:center">
            <span>Aset Lancar</span>
-           <span class="tabular" style="font-size:11px;color:var(--text-muted);font-weight:600">${fmtHide(totalLancar)}</span>
+           <span class="tabular" style="font-size:13px;color:var(--text-muted);font-weight:600">${fmtHide(totalLancar)}</span>
         </div>
-        <div class="horizontal-scroll" style="margin-bottom:20.4px;">
+        <div class="horizontal-scroll" style="margin-bottom:24px;">
           ${asetLancarCards}
         </div>
 
         ${kartuKredit.length > 0 ? `
-        <div style="font-size:13.6px;font-weight:800;color:var(--text);margin:20.4px 0 10.2px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin:24px 0 12px;display:flex;justify-content:space-between;align-items:center">
            <span>Kartu Kredit & Paylater</span>
-           <span class="tabular" style="font-size:11px;color:var(--text-muted);font-weight:600">${fmtHide(totalKredit)}</span>
+           <span class="tabular" style="font-size:13px;color:var(--text-muted);font-weight:600">${fmtHide(totalKredit)}</span>
         </div>
-        <div class="horizontal-scroll" style="margin-bottom:20.4px;">
+        <div class="horizontal-scroll" style="margin-bottom:24px;">
           ${kartuKreditCards}
         </div>
         ` : ''}
 
-        <div style="font-size:13.6px;font-weight:800;color:var(--text);margin:20.4px 0 10.2px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin:24px 0 12px;display:flex;justify-content:space-between;align-items:center">
            <span>Investasi</span>
-           <span class="tabular" style="font-size:11px;color:var(--text-muted);font-weight:600">${fmtHide(totalInvestasi)}</span>
+           <span class="tabular" style="font-size:13px;color:var(--text-muted);font-weight:600">${fmtHide(totalInvestasi)}</span>
         </div>
-        <div class="horizontal-scroll" style="margin-bottom:20.4px;">
-          ${state.investasi.length === 0 ? '<div class="card" style="padding:20.4px;text-align:center;color:var(--text-muted);font-size:12.3px;font-weight:500;width:100%">Belum ada investasi.</div>' : state.investasi.map(renderInvestasiCard).join('')}
+        <div class="horizontal-scroll" style="margin-bottom:24px;">
+          ${state.investasi.length === 0 ? '<div class="card" style="padding:24px;text-align:center;color:var(--text-muted);font-size:14.5px;font-weight:500;width:100%">Belum ada investasi.</div>' : state.investasi.map(renderInvestasiCard).join('')}
         </div>
-        <button class="btn-primary" onclick="openInvestasiBaruModal()" style="margin-bottom:27.2px; background:var(--surface-raised); color:var(--violet); box-shadow:none;"><i data-lucide="plus" style="width:17px;height:17px"></i> Tambah Investasi Baru</button>
+        <button class="btn-primary" onclick="openInvestasiBaruModal()" style="margin-bottom:32px; background:var(--surface-raised); color:var(--violet); box-shadow:none;"><i data-lucide="plus" style="width:20px;height:20px"></i> Tambah Investasi Baru</button>
       `;
     }
 
@@ -105,30 +105,30 @@
       const gain = value - modal;
       const gainPct = modal ? (gain / modal) * 100 : 0;
       const up = gain >= 0;
-      return `<div class="card" style="padding:17px;width:280.5px;flex-shrink:0;box-sizing:border-box;border-top: 3.4px solid #00C896">
-        <div style="display:flex;align-items:center;gap:11.9px;margin-bottom:10.2px">
+      return `<div class="card" style="padding:20px;width:330px;flex-shrink:0;box-sizing:border-box;border-top: 4px solid #00C896">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
           ${invIcon(inv, 46)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:13.6px;font-weight:700;color:var(--text)">${escapeHtml(inv.name)}</div>
-            <div style="font-size:11px;color:var(--text-muted);font-weight:500">${escapeHtml(inv.type)}</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">${escapeHtml(inv.name)}</div>
+            <div style="font-size:13px;color:var(--text-muted);font-weight:500">${escapeHtml(inv.type)}</div>
           </div>
-          <button onclick="removeInvestasi('${inv.id}')" style="background:none;border:none;cursor:pointer;padding:5.1px;color:var(--text-muted)"><i data-lucide="trash-2" style="width:15.3px;height:15.3px"></i></button>
+          <button onclick="removeInvestasi('${inv.id}')" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted)"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:11.9px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
           <div>
-            <div style="font-size:10.2px;color:var(--text-muted);font-weight:600">NILAI SEKARANG</div>
-            <div class="tabular" style="font-size:18.7px;font-weight:800;color:var(--text)">${fmtHide(value)}</div>
+            <div style="font-size:12px;color:var(--text-muted);font-weight:600">NILAI SEKARANG</div>
+            <div class="tabular" style="font-size:22px;font-weight:800;color:var(--text)">${fmtHide(value)}</div>
           </div>
           <div style="text-align:right">
-            <div class="tabular" style="font-size:11.9px;font-weight:800;color:${up?'var(--emerald)':'var(--coral)'}">${up?'+':''}${fmtHide(gain)}</div>
-            <div style="font-size:10.2px;font-weight:700;color:${up?'var(--emerald)':'var(--coral)'}">${up?'+':''}${gainPct.toFixed(1)}%</div>
+            <div class="tabular" style="font-size:14px;font-weight:800;color:${up?'var(--emerald)':'var(--coral)'}">${up?'+':''}${fmtHide(gain)}</div>
+            <div style="font-size:12px;font-weight:700;color:${up?'var(--emerald)':'var(--coral)'}">${up?'+':''}${gainPct.toFixed(1)}%</div>
           </div>
         </div>
-        <div class="tabular" style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:11.9px">Modal: ${fmtHide(modal)}</div>
-        <div style="display:flex;gap:8.5px">
-          <button onclick="openInvestasiSetor('${inv.id}')" style="flex:1;background:var(--violet-soft);border:none;border-radius:10.2px;padding:9.3px 0;color:var(--violet);font-size:11.5px;font-weight:700;cursor:pointer">+ Setor</button>
-          <button onclick="openInvestasiUpdateValue('${inv.id}')" style="flex:1;background:var(--surface-raised);border:none;border-radius:10.2px;padding:9.3px 0;color:var(--text);font-size:11.5px;font-weight:700;cursor:pointer">Update Nilai</button>
-          <button onclick="openInvestasiJual('${inv.id}')" style="flex:1;background:var(--surface-raised);border:none;border-radius:10.2px;padding:9.3px 0;color:var(--text);font-size:11.5px;font-weight:700;cursor:pointer">Jual</button>
+        <div class="tabular" style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:14px">Modal: ${fmtHide(modal)}</div>
+        <div style="display:flex;gap:10px">
+          <button onclick="openInvestasiSetor('${inv.id}')" style="flex:1;background:var(--violet-soft);border:none;border-radius:12px;padding:11px 0;color:var(--violet);font-size:13.5px;font-weight:700;cursor:pointer">+ Setor</button>
+          <button onclick="openInvestasiUpdateValue('${inv.id}')" style="flex:1;background:var(--surface-raised);border:none;border-radius:12px;padding:11px 0;color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer">Update Nilai</button>
+          <button onclick="openInvestasiJual('${inv.id}')" style="flex:1;background:var(--surface-raised);border:none;border-radius:12px;padding:11px 0;color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer">Jual</button>
         </div>
       </div>`;
     }
@@ -146,16 +146,16 @@
       const accountChips = state.accounts.filter(a => a.type !== 'Kredit').map(a => `<button class="chip ${(window._investasiAccount||state.accounts[0].name)===a.name?'active':''}" onclick="window._investasiAccount='${escapeHtml(a.name)}';renderInvestasiBaruModal()">${escapeHtml(a.name)}</button>`).join('');
       
       openOverlay(`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13.6px">
-          <span class="display" style="font-weight:800;font-size:20.4px;color:var(--text)">Investasi Baru</span>
-          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Investasi Baru</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
         </div>
         
-        <label class="field-label" for="investasi-name" style="margin-top:8.5px">Nama investasi</label>
+        <label class="field-label" for="investasi-name" style="margin-top:10px">Nama investasi</label>
         <input id="investasi-name" oninput="window._investasiName=this.value" value="${escapeHtml(window._investasiName||'')}" class="field-input" placeholder="Misal: Reksadana BCA">
         
         <label class="field-label">Jenis</label>
-        <div style="display:flex;gap:8.5px;overflow-x:auto;padding-bottom:5.1px;margin-bottom:6.8px">
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">
           ${jenisChips}
         </div>
         
@@ -163,12 +163,12 @@
         <input id="investasi-modal" class="field-input" oninput="formatNumberInput(this); window._investasiModalRaw=this.value" value="${window._investasiModalRaw || ''}" placeholder="0" inputmode="numeric">
         
         <label class="field-label">Dari akun (kalau isi modal awal)</label>
-        <div style="display:flex;gap:8.5px;flex-wrap:wrap;padding-bottom:5.1px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">
           ${accountChips}
         </div>
         
         <div id="investasi-error" class="err"></div>
-        <button class="btn-primary" onclick="submitInvestasiBaru()"><i data-lucide="plus" style="width:17px;height:17px"></i> Tambah Investasi</button>
+        <button class="btn-primary" onclick="submitInvestasiBaru()"><i data-lucide="plus" style="width:20px;height:20px"></i> Tambah Investasi</button>
       `);
     }
 
@@ -207,16 +207,16 @@
       const inv = state.investasi.find(i => i.id === id);
       const accountChips = state.accounts.filter(a => a.type !== 'Kredit').map(a => `<button class="chip ${window._investasiActionAccount===a.name?'active':''}" onclick="window._investasiActionAccount='${escapeHtml(a.name)}';renderInvestasiSetorModal()">${escapeHtml(a.name)}</button>`).join('');
       openOverlay(`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13.6px">
-          <span class="display" style="font-weight:800;font-size:20.4px;color:var(--text)">Setor ke ${escapeHtml(inv.name)}</span>
-          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Setor ke ${escapeHtml(inv.name)}</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
         </div>
-        <div class="card" style="padding:17px;margin-bottom:17px">
-          <label for="investasi-setor-amount" style="color:var(--text-muted);font-size:11px;margin-bottom:5.1px;font-weight:700;display:block">NOMINAL (RP)</label>
-          <input id="investasi-setor-amount" oninput="formatNumberInput(this); window._investasiActionAmountRaw=this.value" value="${window._investasiActionAmountRaw || ''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:32.3px;color:var(--violet)">
+        <div class="card" style="padding:20px;margin-bottom:20px">
+          <label for="investasi-setor-amount" style="color:var(--text-muted);font-size:13px;margin-bottom:6px;font-weight:700;display:block">NOMINAL (RP)</label>
+          <input id="investasi-setor-amount" oninput="formatNumberInput(this); window._investasiActionAmountRaw=this.value" value="${window._investasiActionAmountRaw || ''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;color:var(--violet)">
         </div>
-        <label class="field-label" style="margin-top:0">Dari akun</label><div style="display:flex;gap:8.5px;flex-wrap:wrap;padding-bottom:5.1px">${accountChips}</div>
-        <div id="investasi-setor-error" class="err"></div><button class="btn-primary" onclick="submitInvestasiSetor()"><i data-lucide="check" style="width:17px;height:17px"></i> Simpan setoran</button>
+        <label class="field-label" style="margin-top:0">Dari akun</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${accountChips}</div>
+        <div id="investasi-setor-error" class="err"></div><button class="btn-primary" onclick="submitInvestasiSetor()"><i data-lucide="check" style="width:20px;height:20px"></i> Simpan setoran</button>
       `);
     }
     function submitInvestasiSetor() {
@@ -239,13 +239,13 @@
     function renderInvestasiUpdateValueModal() {
       const inv = state.investasi.find(i => i.id === window._investasiActionId);
       openOverlay(`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13.6px"><span class="display" style="font-weight:800;font-size:20.4px;color:var(--text)">Update nilai ${escapeHtml(inv.name)}</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:17px;height:17px;color:var(--text-muted)"></i></button></div>
-        <div style="font-size:11.9px;color:var(--text-muted);margin-bottom:13.6px;font-weight:500">Nilai pasar saat ini. Tidak membuat transaksi — cuma menghitung ulang untung/rugi.</div>
-        <div class="card" style="padding:17px;margin-bottom:17px">
-          <label for="investasi-value-amount" style="color:var(--text-muted);font-size:11px;margin-bottom:5.1px;font-weight:700;display:block">NILAI SEKARANG (RP)</label>
-          <input id="investasi-value-amount" oninput="formatNumberInput(this); window._investasiUpdateValueRaw=this.value" placeholder="0" value="${window._investasiUpdateValueRaw || ''}" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:32.3px;color:var(--violet)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Update nilai ${escapeHtml(inv.name)}</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;font-weight:500">Nilai pasar saat ini. Tidak membuat transaksi — cuma menghitung ulang untung/rugi.</div>
+        <div class="card" style="padding:20px;margin-bottom:20px">
+          <label for="investasi-value-amount" style="color:var(--text-muted);font-size:13px;margin-bottom:6px;font-weight:700;display:block">NILAI SEKARANG (RP)</label>
+          <input id="investasi-value-amount" oninput="formatNumberInput(this); window._investasiUpdateValueRaw=this.value" placeholder="0" value="${window._investasiUpdateValueRaw || ''}" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;color:var(--violet)">
         </div>
-        <div id="investasi-value-error" class="err"></div><button class="btn-primary" onclick="submitInvestasiUpdateValue()"><i data-lucide="check" style="width:17px;height:17px"></i> Simpan</button>
+        <div id="investasi-value-error" class="err"></div><button class="btn-primary" onclick="submitInvestasiUpdateValue()"><i data-lucide="check" style="width:20px;height:20px"></i> Simpan</button>
       `);
     }
     function submitInvestasiUpdateValue() {
@@ -265,14 +265,14 @@
       const inv = state.investasi.find(i => i.id === window._investasiActionId);
       const accountChips = state.accounts.filter(a => a.type !== 'Kredit').map(a => `<button class="chip ${window._investasiActionAccount===a.name?'active':''}" onclick="window._investasiActionAccount='${escapeHtml(a.name)}';renderInvestasiJualModal()">${escapeHtml(a.name)}</button>`).join('');
       openOverlay(`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6.8px"><span class="display" style="font-weight:800;font-size:20.4px;color:var(--text)">Jual ${escapeHtml(inv.name)}</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:17px;height:17px;color:var(--text-muted)"></i></button></div>
-        <div style="font-size:11.9px;color:var(--text-muted);margin-bottom:13.6px;font-weight:500">Nilai saat ini: ${fmtRp(inv.currentValue)}</div>
-        <div class="card" style="padding:17px;margin-bottom:17px">
-          <label for="investasi-jual-amount" style="color:var(--text-muted);font-size:11px;margin-bottom:5.1px;font-weight:700;display:block">NOMINAL DIJUAL (RP)</label>
-          <input id="investasi-jual-amount" oninput="formatNumberInput(this); window._investasiSellAmountRaw=this.value" value="${window._investasiSellAmountRaw||''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:32.3px;color:var(--coral)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Jual ${escapeHtml(inv.name)}</span><button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button></div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px;font-weight:500">Nilai saat ini: ${fmtRp(inv.currentValue)}</div>
+        <div class="card" style="padding:20px;margin-bottom:20px">
+          <label for="investasi-jual-amount" style="color:var(--text-muted);font-size:13px;margin-bottom:6px;font-weight:700;display:block">NOMINAL DIJUAL (RP)</label>
+          <input id="investasi-jual-amount" oninput="formatNumberInput(this); window._investasiSellAmountRaw=this.value" value="${window._investasiSellAmountRaw||''}" placeholder="0" inputmode="numeric" style="width:100%;background:none;border:none;outline:none;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;color:var(--coral)">
         </div>
-        <label class="field-label" style="margin-top:0">Masuk ke akun</label><div style="display:flex;gap:8.5px;flex-wrap:wrap;padding-bottom:5.1px">${accountChips}</div>
-        <div id="investasi-jual-error" class="err"></div><button class="btn-primary" onclick="submitInvestasiJual()"><i data-lucide="check" style="width:17px;height:17px"></i> Simpan penjualan</button>
+        <label class="field-label" style="margin-top:0">Masuk ke akun</label><div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:6px">${accountChips}</div>
+        <div id="investasi-jual-error" class="err"></div><button class="btn-primary" onclick="submitInvestasiJual()"><i data-lucide="check" style="width:20px;height:20px"></i> Simpan penjualan</button>
       `);
     }
     function submitInvestasiJual() {
@@ -331,28 +331,28 @@
 
       let txHtml = '';
       if (ccTx.length === 0) {
-         txHtml = `<div style="text-align:center;color:var(--text-muted);font-size:11.9px;padding:20.4px 0;font-weight:500">Belum ada transaksi.</div>`;
+         txHtml = `<div style="text-align:center;color:var(--text-muted);font-size:14px;padding:24px 0;font-weight:500">Belum ada transaksi.</div>`;
       } else {
          txHtml = ccTx.map((t, i) => {
             const meta = catMeta(t.category);
             const isKeluar = t.type === 'Keluar'; 
             
             const formattedAmt = parseInt(t.amount || 0, 10).toLocaleString('id-ID').replace(/,/g, '.');
-            const paySpecificBtn = isKeluar ? `<button onclick="closeModal(); setTimeout(() => { openTransferModal(); window._transferMode='akun'; window._transferTo='${escapeHtml(name)}'; window._transferAmountRaw='${formattedAmt}'; window._transferNotes='Bayar: ${escapeHtml(t.desc)}'; renderTransferModal(); }, 300)" style="background:var(--violet-soft);color:var(--violet);border:none;border-radius:8.5px;padding:6.8px 11.9px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8.5px;display:inline-flex;align-items:center;gap:6.8px;box-shadow:0 2px 5.1px rgba(27,47,94,0.15)"><i data-lucide="check-circle-2" style="width:13.6px;height:13.6px;"></i> Bayar Tagihan Ini</button>` : '';
+            const paySpecificBtn = isKeluar ? `<button onclick="closeModal(); setTimeout(() => { openTransferModal(); window._transferMode='akun'; window._transferTo='${escapeHtml(name)}'; window._transferAmountRaw='${formattedAmt}'; window._transferNotes='Bayar: ${escapeHtml(t.desc)}'; renderTransferModal(); }, 300)" style="background:var(--violet-soft);color:var(--violet);border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(27,47,94,0.15)"><i data-lucide="check-circle-2" style="width:16px;height:16px;"></i> Bayar Tagihan Ini</button>` : '';
 
             return `
-            <div style="display:flex;align-items:flex-start;padding:11.9px 0;${i > 0 ? 'border-top:1px solid var(--border);' : ''}">
+            <div style="display:flex;align-items:flex-start;padding:14px 0;${i > 0 ? 'border-top:1px solid var(--border);' : ''}">
               <div onclick="showTxDetail('${t.id}')" style="cursor:pointer;margin-top:2px;">
                   ${iconBubble(meta.icon, meta.color, 42)}
               </div>
-              <div style="flex:1;min-width:0;margin-left:11.9px;">
+              <div style="flex:1;min-width:0;margin-left:14px;">
                 <div onclick="showTxDetail('${t.id}')" style="cursor:pointer;">
-                  <div style="font-size:12.8px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(t.desc)}</div>
-                  <div style="font-size:11px;color:var(--text-muted);font-weight:500">${fmtDateLabel(t.date)}</div>
+                  <div style="font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(t.desc)}</div>
+                  <div style="font-size:13px;color:var(--text-muted);font-weight:500">${fmtDateLabel(t.date)}</div>
                 </div>
                 ${paySpecificBtn}
               </div>
-              <div class="tabular" style="font-size:13.2px;font-weight:800;color:${isKeluar?'var(--text)':'var(--emerald)'};flex-shrink:0;cursor:pointer" onclick="showTxDetail('${t.id}')">
+              <div class="tabular" style="font-size:15.5px;font-weight:800;color:${isKeluar?'var(--text)':'var(--emerald)'};flex-shrink:0;cursor:pointer" onclick="showTxDetail('${t.id}')">
                 ${isKeluar ? '' : '-'}${fmtRp(t.amount)}
               </div>
             </div>`;
@@ -360,66 +360,66 @@
       }
 
       const actionHtml = `
-        <div style="display:flex;gap:8.5px;margin-top:20.4px;">
-          <button onclick="closeModal(); state.tab='report'; state.txAccount='${escapeHtml(name)}'; render(); window.scrollTo(0,0);" style="flex:1;background:var(--surface-raised);border:none;border-radius:11.9px;padding:11.9px 0;color:var(--text);font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px">
-            <i data-lucide="list" style="width:15.3px;height:15.3px"></i> Filter Report
+        <div style="display:flex;gap:10px;margin-top:24px;">
+          <button onclick="closeModal(); state.tab='report'; state.txAccount='${escapeHtml(name)}'; render(); window.scrollTo(0,0);" style="flex:1;background:var(--surface-raised);border:none;border-radius:14px;padding:14px 0;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            <i data-lucide="list" style="width:18px;height:18px"></i> Filter Report
           </button>
-          <button onclick="closeModal(); setTimeout(() => { openTransferModal(); window._transferMode='akun'; window._transferTo='${escapeHtml(name)}'; renderTransferModal(); }, 300)" style="flex:1;background:var(--violet-soft);border:none;border-radius:11.9px;padding:11.9px 0;color:var(--violet);font-size:12.8px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6.8px">
-            <i data-lucide="credit-card" style="width:15.3px;height:15.3px"></i> Bayar
+          <button onclick="closeModal(); setTimeout(() => { openTransferModal(); window._transferMode='akun'; window._transferTo='${escapeHtml(name)}'; renderTransferModal(); }, 300)" style="flex:1;background:var(--violet-soft);border:none;border-radius:14px;padding:14px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            <i data-lucide="credit-card" style="width:18px;height:18px"></i> Bayar
           </button>
         </div>
       `;
 
       openOverlay(`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:17px">
-          <span class="display" style="font-weight:800;font-size:20.4px;color:var(--text)">Detail Kartu Kredit</span>
-          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <span class="display" style="font-weight:800;font-size:24px;color:var(--text)">Detail Kartu Kredit</span>
+          <button onclick="closeModal()" style="background:var(--surface-raised);border:none;border-radius:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
         </div>
-        <div class="card" style="padding:20.4px;margin-bottom:17px;">
+        <div class="card" style="padding:24px;margin-bottom:20px;">
            ${cardBanner(name)}
-           <div style="font-size:15.3px;font-weight:800;color:var(--text);margin-bottom:13.6px;text-align:center;">${escapeHtml(name)}</div>
+           <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px;text-align:center;">${escapeHtml(name)}</div>
 
-           <div style="padding:13.6px; background:var(--surface-raised); border-radius:13.6px; margin-bottom:17px">
-              <div style="font-size:9.8px; font-weight:800; color:var(--text-muted); margin-bottom:10.2px; letter-spacing:0.5px">SIKLUS BERJALAN (${cycleLabel})</div>
+           <div style="padding:16px; background:var(--surface-raised); border-radius:16px; margin-bottom:20px">
+              <div style="font-size:11.5px; font-weight:800; color:var(--text-muted); margin-bottom:12px; letter-spacing:0.5px">SIKLUS BERJALAN (${cycleLabel})</div>
               
-              <div style="display:flex;justify-content:space-between;margin-bottom:6.8px">
-                 <span style="font-size:11px;color:var(--text);font-weight:600">Pemakaian Berjalan</span>
-                 <span class="tabular" style="font-size:11.9px;font-weight:800;color:var(--text)">${fmtHide(tagihanBerjalan)}</span>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                 <span style="font-size:13px;color:var(--text);font-weight:600">Pemakaian Berjalan</span>
+                 <span class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtHide(tagihanBerjalan)}</span>
               </div>
               
               ${ccCicilan.length > 0 ? `
-              <div style="display:flex;justify-content:space-between;margin-bottom:10.2px">
-                 <span style="font-size:11px;color:var(--text);font-weight:600">Cicilan Akan Ditagih (${ccCicilan.length} item)</span>
-                 <span class="tabular" style="font-size:11.9px;font-weight:800;color:var(--text)">${fmtHide(totalCicilanAkanDatang)}</span>
+              <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                 <span style="font-size:13px;color:var(--text);font-weight:600">Cicilan Akan Ditagih (${ccCicilan.length} item)</span>
+                 <span class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtHide(totalCicilanAkanDatang)}</span>
               </div>
               ` : ''}
 
-              <div style="display:flex;justify-content:space-between;padding-top:10.2px;border-top:1px dashed var(--border)">
-                 <span style="font-size:11px;color:var(--violet);font-weight:800">Est. Tagihan Cetak</span>
-                 <span class="tabular" style="font-size:12.8px;font-weight:800;color:var(--violet)">${fmtHide(Math.max(0, tagihanBerjalan + totalCicilanAkanDatang))}</span>
+              <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px dashed var(--border)">
+                 <span style="font-size:13px;color:var(--violet);font-weight:800">Est. Tagihan Cetak</span>
+                 <span class="tabular" style="font-size:15px;font-weight:800;color:var(--violet)">${fmtHide(Math.max(0, tagihanBerjalan + totalCicilanAkanDatang))}</span>
               </div>
            </div>
 
-           <div style="height:8.5px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:13.6px">
+           <div style="height:10px;border-radius:999px;background:var(--surface-raised);overflow:hidden;margin-bottom:16px">
               <div style="width:${pct}%;height:100%;background:${pct > 80 ? 'var(--coral)' : 'var(--violet)'};border-radius:999px"></div>
            </div>
-           <div style="display:flex;justify-content:space-between;margin-bottom:8.5px">
-              <span style="font-size:11.9px;color:var(--text-muted);font-weight:600">Total Outstanding</span>
-              <span class="tabular" style="font-size:12.8px;font-weight:800;color:var(--coral)">${fmtHide(tagihan)}</span>
+           <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:14px;color:var(--text-muted);font-weight:600">Total Outstanding</span>
+              <span class="tabular" style="font-size:15px;font-weight:800;color:var(--coral)">${fmtHide(tagihan)}</span>
            </div>
-           <div style="display:flex;justify-content:space-between;margin-bottom:8.5px">
-              <span style="font-size:11.9px;color:var(--text-muted);font-weight:600">Limit Kartu</span>
-              <span class="tabular" style="font-size:12.8px;font-weight:800;color:var(--text)">${fmtHide(limit)}</span>
+           <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:14px;color:var(--text-muted);font-weight:600">Limit Kartu</span>
+              <span class="tabular" style="font-size:15px;font-weight:800;color:var(--text)">${fmtHide(limit)}</span>
            </div>
-           <div style="display:flex;justify-content:space-between;padding-top:8.5px;border-top:1px dashed var(--border)">
-              <span style="font-size:11.9px;color:var(--text-muted);font-weight:600">Sisa Limit</span>
-              <span class="tabular" style="font-size:12.8px;font-weight:800;color:var(--emerald)">${limit > 0 ? fmtHide(sisa) : '-'}</span>
+           <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px dashed var(--border)">
+              <span style="font-size:14px;color:var(--text-muted);font-weight:600">Sisa Limit</span>
+              <span class="tabular" style="font-size:15px;font-weight:800;color:var(--emerald)">${limit > 0 ? fmtHide(sisa) : '-'}</span>
            </div>
            ${actionHtml}
         </div>
         
-        <div style="font-size:13.6px;font-weight:800;color:var(--text);margin-bottom:10.2px;">Semua Transaksi</div>
-        <div class="card" style="padding:5.1px 17px; max-height:340px; overflow-y:auto;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:12px;">Semua Transaksi</div>
+        <div class="card" style="padding:6px 20px; max-height:400px; overflow-y:auto;">
             ${txHtml}
         </div>
       `);
@@ -430,127 +430,127 @@
       const totalMasuk = state.transactions.filter(t=>t.type==='Masuk' && !['Transfer Antar Rekening', 'Pembayaran CC', 'Hutang Piutang'].includes(t.category)).reduce((a,b)=>a+Number(b.amount),0);
       
       return `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:17px">
-          <div style="display:flex;align-items:center;gap:13.6px;">
-            <div style="display:flex;align-items:center;justify-content:center;width:54.4px;height:54.4px;background:var(--navy-deep);border-radius:17px;box-shadow:0 6.8px 13.6px -5.1px rgba(20,39,78,0.5)">
-               <span class="display" style="font-size:27.2px;font-weight:800;color:var(--sunrise-b);letter-spacing:-1px">K</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:var(--navy-deep);border-radius:20px;box-shadow:0 8px 16px -6px rgba(20,39,78,0.5)">
+               <span class="display" style="font-size:32px;font-weight:800;color:var(--sunrise-b);letter-spacing:-1px">K</span>
             </div>
             <div>
-              <div class="display" style="font-size:22.1px;font-weight:800;color:var(--text);line-height:1">KAYA</div>
-              <div style="font-size:11.9px;color:var(--text-muted);font-weight:500">${state.transactions.length} transaksi tercatat</div>
+              <div class="display" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">KAYA</div>
+              <div style="font-size:14px;color:var(--text-muted);font-weight:500">${state.transactions.length} transaksi tercatat</div>
             </div>
           </div>
-          <button onclick="refreshData()" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:35.7px;height:35.7px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3.4px 8.5px rgba(20,33,61,0.05)">
-            <i data-lucide="refresh-cw" style="width:17px;height:17px;color:var(--violet)"></i>
+          <button onclick="refreshData()" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 10px rgba(20,33,61,0.05)">
+            <i data-lucide="refresh-cw" style="width:20px;height:20px;color:var(--violet)"></i>
           </button>
         </div>
-        <div style="display:flex;gap:10.2px;margin-bottom:23.8px">
-          <div class="card" style="flex:1;padding:13.6px">
-            <div style="font-size:11px;color:var(--text-muted);font-weight:600">Total pemasukan</div>
-            <div class="tabular" style="color:var(--emerald);font-size:13.6px;margin-top:5.1px;font-weight:800">${fmtRp(totalMasuk)}</div>
+        <div style="display:flex;gap:12px;margin-bottom:28px">
+          <div class="card" style="flex:1;padding:16px">
+            <div style="font-size:13px;color:var(--text-muted);font-weight:600">Total pemasukan</div>
+            <div class="tabular" style="color:var(--emerald);font-size:16px;margin-top:6px;font-weight:800">${fmtRp(totalMasuk)}</div>
           </div>
-          <div class="card" style="flex:1;padding:13.6px">
-            <div style="font-size:11px;color:var(--text-muted);font-weight:600">Total pengeluaran</div>
-            <div class="tabular" style="color:var(--pink);font-size:13.6px;margin-top:5.1px;font-weight:800">${fmtRp(totalKeluar)}</div>
+          <div class="card" style="flex:1;padding:16px">
+            <div style="font-size:13px;color:var(--text-muted);font-weight:600">Total pengeluaran</div>
+            <div class="tabular" style="color:var(--pink);font-size:16px;margin-top:6px;font-weight:800">${fmtRp(totalKeluar)}</div>
           </div>
         </div>
 
-        <div style="font-size:13.6px;font-weight:800;color:var(--text);margin-bottom:10.2px">Pengaturan & Fitur Tambahan</div>
-        <div class="card" style="padding:5.1px 13.6px;margin-bottom:23.8px">
-          <button onclick="openImportModal()" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:11.9px;padding:12.8px 0;text-align:left">
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:12px">Pengaturan & Fitur Tambahan</div>
+        <div class="card" style="padding:6px 16px;margin-bottom:28px">
+          <button onclick="openImportModal()" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 0;text-align:left">
             ${iconBubble('upload-cloud', '#1B2F5E', 42)}
             <div style="flex:1">
-              <div style="font-size:12.8px;color:var(--text);font-weight:700">Import e-Statement</div>
-              <div style="font-size:11px;color:var(--text-muted);font-weight:500">Masukkan mutasi CSV/PDF</div>
+              <div style="font-size:15px;color:var(--text);font-weight:700">Import e-Statement</div>
+              <div style="font-size:13px;color:var(--text-muted);font-weight:500">Masukkan mutasi CSV/PDF</div>
             </div>
-            <i data-lucide="chevron-right" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
+            <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
           </button>
           <div style="border-top:1px solid var(--border)"></div>
-          <button onclick="setTab('pengaturan_akun')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:11.9px;padding:12.8px 0;text-align:left">
+          <button onclick="setTab('pengaturan_akun')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 0;text-align:left">
             ${iconBubble('wallet', '#3E9EFF', 42)}
             <div style="flex:1">
-              <div style="font-size:12.8px;color:var(--text);font-weight:700">Kelola Akun & Limit Kredit</div>
-              <div style="font-size:11px;color:var(--text-muted);font-weight:500">Atur saldo awal dan kartu kredit</div>
+              <div style="font-size:15px;color:var(--text);font-weight:700">Kelola Akun & Limit Kredit</div>
+              <div style="font-size:13px;color:var(--text-muted);font-weight:500">Atur saldo awal dan kartu kredit</div>
             </div>
-            <i data-lucide="chevron-right" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
+            <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
           </button>
           <div style="border-top:1px solid var(--border)"></div>
-          <button onclick="setTab('pengaturan_budget')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:11.9px;padding:12.8px 0;text-align:left">
+          <button onclick="setTab('pengaturan_budget')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 0;text-align:left">
             ${iconBubble('pie-chart', '#00C896', 42)}
             <div style="flex:1">
-              <div style="font-size:12.8px;color:var(--text);font-weight:700">Budget Grup Kategori</div>
-              <div style="font-size:11px;color:var(--text-muted);font-weight:500">Atur batas pengeluaran bulanan</div>
+              <div style="font-size:15px;color:var(--text);font-weight:700">Budget Grup Kategori</div>
+              <div style="font-size:13px;color:var(--text-muted);font-weight:500">Atur batas pengeluaran bulanan</div>
             </div>
-            <i data-lucide="chevron-right" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
+            <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
           </button>
           <div style="border-top:1px solid var(--border)"></div>
-          <button onclick="setTab('tabungan')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:11.9px;padding:12.8px 0;text-align:left">
+          <button onclick="setTab('tabungan')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 0;text-align:left">
             ${iconBubble('piggy-bank', '#00C896', 42)}
             <div style="flex:1">
-              <div style="font-size:12.8px;color:var(--text);font-weight:700">Target Tabungan</div>
-              <div style="font-size:11px;color:var(--text-muted);font-weight:500">Kelola tujuan tabungan Anda</div>
+              <div style="font-size:15px;color:var(--text);font-weight:700">Target Tabungan</div>
+              <div style="font-size:13px;color:var(--text-muted);font-weight:500">Kelola tujuan tabungan Anda</div>
             </div>
-            <i data-lucide="chevron-right" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
+            <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
           </button>
           <div style="border-top:1px solid var(--border)"></div>
-          <button onclick="setTab('hutang')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:11.9px;padding:12.8px 0;text-align:left">
+          <button onclick="setTab('hutang')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 0;text-align:left">
             ${iconBubble('scroll-text', '#FFA53D', 42)}
             <div style="flex:1">
-              <div style="font-size:12.8px;color:var(--text);font-weight:700">Hutang & Cicilan</div>
-              <div style="font-size:11px;color:var(--text-muted);font-weight:500">Otomasi cicilan & hutang</div>
+              <div style="font-size:15px;color:var(--text);font-weight:700">Hutang & Cicilan</div>
+              <div style="font-size:13px;color:var(--text-muted);font-weight:500">Otomasi cicilan & hutang</div>
             </div>
-            <i data-lucide="chevron-right" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
+            <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
           </button>
           <div style="border-top:1px solid var(--border)"></div>
-          <button onclick="setTab('berulang')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:11.9px;padding:12.8px 0;text-align:left">
+          <button onclick="setTab('berulang')" style="width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px 0;text-align:left">
             ${iconBubble('repeat', '#3E9EFF', 42)}
             <div style="flex:1">
-              <div style="font-size:12.8px;color:var(--text);font-weight:700">Transaksi Berulang</div>
-              <div style="font-size:11px;color:var(--text-muted);font-weight:500">Otomatis dicatat setiap periode</div>
+              <div style="font-size:15px;color:var(--text);font-weight:700">Transaksi Berulang</div>
+              <div style="font-size:13px;color:var(--text-muted);font-weight:500">Otomatis dicatat setiap periode</div>
             </div>
-            <i data-lucide="chevron-right" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
+            <i data-lucide="chevron-right" style="width:18px;height:18px;color:var(--text-muted)"></i>
           </button>
         </div>
         
-        <div class="card" style="padding:13.6px 15.3px;margin-top:13.6px;margin-bottom:23.8px;display:flex;align-items:center;justify-content:center;gap:10.2px">
-          <i data-lucide="info" style="width:15.3px;height:15.3px;color:var(--text-muted)"></i>
-<span style="font-size:11.9px;color:var(--text-muted);font-weight:600">KAYA · Financial Tracker · v1.0.0 · Public Release · by Abidzi</span>
+        <div class="card" style="padding:16px 18px;margin-top:16px;margin-bottom:28px;display:flex;align-items:center;justify-content:center;gap:12px">
+          <i data-lucide="info" style="width:18px;height:18px;color:var(--text-muted)"></i>
+<span style="font-size:14px;color:var(--text-muted);font-weight:600">KAYA · Financial Tracker · v1.0.0 · Public Release · by Abidzi</span>
         </div>
       `;
     }
 
     function renderPengaturanAkun() {
       return `
-        <div style="display:flex;align-items:center;gap:10.2px;margin-bottom:17px">
-          <button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:35.7px;height:35.7px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
-          <div class="display" style="font-weight:800;font-size:22.1px;color:var(--text)">Kelola Akun</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+          <div class="display" style="font-weight:800;font-size:26px;color:var(--text)">Kelola Akun</div>
         </div>
-        <div style="font-size:11.9px;color:var(--text-muted);margin-bottom:15.3px;font-weight:500">Atur saldo awal rekening, e-money, dan kartu kredit.</div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:18px;font-weight:500">Atur saldo awal rekening, e-money, dan kartu kredit.</div>
     
         ${state.accounts.map((a,i) => { 
           return `
-          <div class="card" style="padding:13.6px 17px;margin-bottom:10.2px">
-            <div style="display:flex;align-items:center;gap:11.9px;margin-bottom:10.2px">
+          <div class="card" style="padding:16px 20px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
               ${accIcon(a.name, i, a.type, 42)}
               <div style="flex:1;min-width:0">
-                <div style="font-size:13.6px;font-weight:700;color:var(--text)">${escapeHtml(a.name)}</div>
-                <div style="font-size:11px;color:var(--text-muted);font-weight:500">${a.type}</div>
+                <div style="font-size:16px;font-weight:700;color:var(--text)">${escapeHtml(a.name)}</div>
+                <div style="font-size:13px;color:var(--text-muted);font-weight:500">${a.type}</div>
               </div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8.5px">
-              <div style="display:flex;align-items:center;gap:8.5px;background:var(--surface-raised);border-radius:10.2px;padding:8.5px 10.2px">
-                <label for="acc-init-${i}" style="font-size:11px;color:var(--text-muted);font-weight:600;flex-shrink:0;cursor:pointer;margin:0;">Saldo awal / Tagihan (Rp)</label>
-                <div style="display:flex; flex:1; gap:6.8px; justify-content: flex-end;">
-                   <input id="acc-init-${i}" class="tabular" inputmode="numeric" oninput="formatNumberInput(this)" value="${a.initial ? a.initial.toLocaleString('id-ID').replace(/,/g, '.') : 0}" style="width:102px;background:white;border:1.5px solid var(--border);border-radius:8.5px;padding:6.8px 10.2px;color:var(--text);font-size:16px;text-align:right;font-weight:700;outline:none">
-                   <button onclick="updateAccountInitialUI('${escapeHtml(a.name)}', document.getElementById('acc-init-${i}').value)" style="background:var(--violet);border:none;border-radius:8.5px;width:32.3px;height:32.3px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 3.4px 8.5px rgba(27,47,94,0.3)"><i data-lucide="save" style="width:15.3px;height:15.3px;color:white"></i></button>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;background:var(--surface-raised);border-radius:12px;padding:10px 12px">
+                <label for="acc-init-${i}" style="font-size:13px;color:var(--text-muted);font-weight:600;flex-shrink:0;cursor:pointer;margin:0;">Saldo awal / Tagihan (Rp)</label>
+                <div style="display:flex; flex:1; gap:8px; justify-content: flex-end;">
+                   <input id="acc-init-${i}" class="tabular" inputmode="numeric" oninput="formatNumberInput(this)" value="${a.initial ? a.initial.toLocaleString('id-ID').replace(/,/g, '.') : 0}" style="width:120px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:19px;text-align:right;font-weight:700;outline:none">
+                   <button onclick="updateAccountInitialUI('${escapeHtml(a.name)}', document.getElementById('acc-init-${i}').value)" style="background:var(--violet);border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 4px 10px rgba(27,47,94,0.3)"><i data-lucide="save" style="width:18px;height:18px;color:white"></i></button>
                 </div>
               </div>
               ${a.type === 'Kredit' ? `
-              <div style="display:flex;align-items:center;gap:8.5px;background:var(--surface-raised);border-radius:10.2px;padding:8.5px 10.2px">
-                <label for="acc-limit-${i}" style="font-size:11px;color:var(--text-muted);font-weight:600;flex-shrink:0;cursor:pointer;margin:0;">Limit Kartu (Rp)</label>
-                <div style="display:flex; flex:1; gap:6.8px; justify-content: flex-end;">
-                   <input id="acc-limit-${i}" class="tabular" inputmode="numeric" oninput="formatNumberInput(this)" value="${a.limit ? a.limit.toLocaleString('id-ID').replace(/,/g, '.') : 0}" style="width:102px;background:white;border:1.5px solid var(--border);border-radius:8.5px;padding:6.8px 10.2px;color:var(--violet);font-size:16px;text-align:right;font-weight:700;outline:none">
-                   <button onclick="updateAccountLimitUI('${escapeHtml(a.name)}', document.getElementById('acc-limit-${i}').value)" style="background:var(--violet);border:none;border-radius:8.5px;width:32.3px;height:32.3px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 3.4px 8.5px rgba(27,47,94,0.3)"><i data-lucide="save" style="width:15.3px;height:15.3px;color:white"></i></button>
+              <div style="display:flex;align-items:center;gap:10px;background:var(--surface-raised);border-radius:12px;padding:10px 12px">
+                <label for="acc-limit-${i}" style="font-size:13px;color:var(--text-muted);font-weight:600;flex-shrink:0;cursor:pointer;margin:0;">Limit Kartu (Rp)</label>
+                <div style="display:flex; flex:1; gap:8px; justify-content: flex-end;">
+                   <input id="acc-limit-${i}" class="tabular" inputmode="numeric" oninput="formatNumberInput(this)" value="${a.limit ? a.limit.toLocaleString('id-ID').replace(/,/g, '.') : 0}" style="width:120px;background:white;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--violet);font-size:19px;text-align:right;font-weight:700;outline:none">
+                   <button onclick="updateAccountLimitUI('${escapeHtml(a.name)}', document.getElementById('acc-limit-${i}').value)" style="background:var(--violet);border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 4px 10px rgba(27,47,94,0.3)"><i data-lucide="save" style="width:18px;height:18px;color:white"></i></button>
                 </div>
               </div>
               ` : ''}
@@ -558,15 +558,15 @@
           </div>`; 
         }).join('')}
     
-        <div style="margin-top:20.4px; font-size:13.6px; font-weight:800; color:var(--text);">Tambah Akun Baru</div>
-        <div style="display:flex; gap:8.5px; margin-bottom:8.5px; margin-top:8.5px;">
+        <div style="margin-top:24px; font-size:16px; font-weight:800; color:var(--text);">Tambah Akun Baru</div>
+        <div style="display:flex; gap:10px; margin-bottom:10px; margin-top:10px;">
             ${AKUN_TIPE.map(t => `<button class="chip ${(window._newAccType||'Aset')===t?'active':''}" onclick="window._newAccType='${t}';renderPengaturanAkun();document.getElementById('screen').innerHTML = renderPengaturanAkun();lucide.createIcons();">${t}</button>`).join('')}
         </div>
-        <div style="display:flex;flex-direction:column;gap:8.5px;margin-top:5.1px;margin-bottom:23.8px">
-          <div style="display:flex;gap:8.5px">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px;margin-bottom:28px">
+          <div style="display:flex;gap:10px">
             <input id="new-account-name" class="field-input" placeholder="Nama akun baru" style="margin:0">
-            <button onclick="addAccountUI()" style="flex-shrink:0;background:var(--violet);border:none;border-radius:11.9px;width:44.2px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-              <i data-lucide="plus" style="width:18.7px;height:18.7px;color:white"></i>
+            <button onclick="addAccountUI()" style="flex-shrink:0;background:var(--violet);border:none;border-radius:14px;width:52px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <i data-lucide="plus" style="width:22px;height:22px;color:white"></i>
             </button>
           </div>
           ${(window._newAccType || 'Aset') === 'Kredit' ? `
@@ -580,11 +580,11 @@
     function renderPengaturanBudget() {
       const { spendCurrent, spendPrev } = getMonthlySpends();
       return `
-        <div style="display:flex;align-items:center;gap:10.2px;margin-bottom:17px">
-          <button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:11.9px;width:35.7px;height:35.7px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:17px;height:17px;color:var(--text-muted)"></i></button>
-          <div class="display" style="font-weight:800;font-size:22.1px;color:var(--text)">Budget Kategori</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <button onclick="setTab('pengaturan')" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+          <div class="display" style="font-weight:800;font-size:26px;color:var(--text)">Budget Kategori</div>
         </div>
-        <div style="font-size:11.9px;color:var(--text-muted);margin-bottom:15.3px;font-weight:500;line-height:1.5">Atur batas pengeluaran grup untuk bulan ini. Tekan ikon simpan setelah mengubah.</div>
+        <div style="font-size:14px;color:var(--text-muted);margin-bottom:18px;font-weight:500;line-height:1.5">Atur batas pengeluaran grup untuk bulan ini. Tekan ikon simpan setelah mengubah.</div>
         ${renderGroupBudgetGroups(spendCurrent, spendPrev, true)}
       `;
     }
