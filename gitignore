@@ -1,0 +1,21 @@
+# clasp (berisi scriptId pribadi)
+.clasp.json
+.clasprc.json
+
+# Rahasia & file lokal
+.env
+*.local
+.dev.vars
+
+# Wrangler / Cloudflare
+.wrangler/
+node_modules/
+
+# Ekspor data keuangan jangan pernah masuk repo
+*.xlsx
+*.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
