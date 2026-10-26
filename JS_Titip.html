@@ -1,0 +1,244 @@
+<script>
+    /**
+     * ============================================================
+     * KAYA - TITIPAN & SPLIT BILL (halaman penuh)
+     * Dibuka dari tombol "Titipan / Split Bill" di modal Edit Transaksi (hanya Keluar).
+     * Memakai nominal transaksi yang TERSIMPAN. Backend: splitBillTransaksi di Titip.gs.
+     * Wajib di-include SETELAH JS_Split di Index.html.
+     * ============================================================
+     */
+    TEMA_JUDUL.titip = 'Titipan & Split Bill';
+    const TITIP_TOLAK = ['Transfer Antar Rekening', 'Pembayaran CC', 'Hutang Piutang', 'Cicilan', 'Refund'];
+
+    function titipNum(raw) { return parseInt(String(raw || '').replace(/[^0-9]/g, ''), 10) || 0; }
+    function titipFmt(n) { return Math.round(n).toLocaleString('id-ID').replace(/,/g, '.'); }
+    function titipAkunList() { return state.accounts.filter(a => a.type !== 'Kredit'); }
+    function titipFriendBaru(defPay) { return { name: '', amountRaw: '', paid: false, payAccount: defPay || 'Tunai' }; }
+
+    // Tombol pemicu di modal Edit Transaksi (tepat di atas tombol simpan)
+    (function () {
+      const renderEditAsli = renderEditTx;
+      renderEditTx = function () {
+        renderEditAsli();
+        const e = window._edit;
+        if (!e || e.type !== 'Keluar' || TITIP_TOLAK.includes(e.category)) return;
+        const t = state.transactions.find(x => x.id === e.id);
+        if (!t || t.type !== 'Keluar') return;
+        const simpan = document.querySelector('#sheet button[onclick="submitEditTx()"]');
+        if (!simpan) return;
+        simpan.insertAdjacentHTML('beforebegin',
+          `<button onclick="openTitip()" style="width:100%;margin-top:12px;background:var(--violet-soft);border:none;border-radius:9999px;padding:14px 0;color:var(--violet);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i data-lucide="users" style="width:18px;height:18px"></i> Titipan / Split Bill</button>`);
+        lucide.createIcons();
+      };
+    })();
+
+    // Tab 'titip' dirender sebagai halaman penuh
+    (function () {
+      const renderSebelumnya = render;
+      render = function () {
+        if (state.tab === 'titip') {
+          if (!window._titip) { state.tab = 'home'; renderSebelumnya(); return; }
+          renderNav();
+          document.getElementById('screen').innerHTML = renderTitip();
+          lucide.createIcons();
+          renderAppbar();
+          titipUpdate();
+        } else {
+          renderSebelumnya();
+        }
+      };
+    })();
+
+    function openTitip() {
+      const e = window._edit;
+      const t = e && state.transactions.find(x => x.id === e.id);
+      if (!t) return;
+      const akun = titipAkunList();
+      const def = akun.find(a => a.name === 'Tunai') || akun[0];
+      const defPay = def ? def.name : 'Tunai';
+      window._titip = {
+        id: t.id, desc: t.desc, total: Math.round(Number(t.amount)), account: t.account || 'Tunai',
+        date: t.date, category: t.category, defPay: defPay,
+        back: state.tab === 'titip' ? 'home' : state.tab,
+        friends: [titipFriendBaru(defPay)]
+      };
+      closeModal();
+      state.tab = 'titip';
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    function titipKembali() {
+      const s = window._titip;
+      state.tab = (s && s.back) || 'home';
+      window._titip = null;
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    function titipTambah() {
+      const s = window._titip;
+      if (s.friends.length >= 8) { showToast('Maksimal 8 teman'); return; }
+      s.friends.push(titipFriendBaru(s.defPay));
+      render();
+    }
+    function titipHapus(i) {
+      const s = window._titip;
+      if (s.friends.length <= 1) return;
+      s.friends.splice(i, 1);
+      render();
+    }
+    function titipTogglePaid(i, on) { window._titip.friends[i].paid = !!on; render(); }
+    function titipSetPay(i, j) {
+      const a = titipAkunList()[j];
+      if (a) { window._titip.friends[i].payAccount = a.name; render(); }
+    }
+
+    // ikut = true: bagi rata antara saya + semua teman. ikut = false: semua jadi titipan teman.
+    function titipBagi(ikut) {
+      const s = window._titip;
+      const n = s.friends.length;
+      const k = ikut ? n + 1 : n;
+      const each = Math.floor(s.total / k);
+      if (each <= 0) return;
+      s.friends.forEach(f => { f.amountRaw = titipFmt(each); });
+      if (!ikut) s.friends[0].amountRaw = titipFmt(each + (s.total - each * n)); // sisa pembulatan ke teman pertama
+      render();
+    }
+
+    function titipHitung() {
+      const s = window._titip;
+      let sum = 0, ok = true;
+      s.friends.forEach(f => {
+        const v = titipNum(f.amountRaw);
+        sum += v;
+        if (!String(f.name || '').trim() || v <= 0) ok = false;
+      });
+      const own = s.total - sum;
+      if (own < 0) ok = false;
+      return { sum: sum, own: own, ok: ok };
+    }
+
+    // Perbarui ringkasan tanpa render ulang (supaya kursor di kolom isian tidak hilang)
+    function titipUpdate() {
+      const s = window._titip;
+      if (!s) return;
+      const h = titipHitung();
+      const elSum = document.getElementById('titip-sum');
+      const elOwn = document.getElementById('titip-own');
+      if (elSum) elSum.textContent = fmtRp(h.sum);
+      if (elOwn) { elOwn.textContent = fmtRp(h.own); elOwn.style.color = h.own < 0 ? 'var(--coral)' : 'var(--emerald)'; }
+
+      let info;
+      if (h.own < 0) info = 'Total bagian teman melebihi nominal transaksi (lebih ' + fmtRp(-h.own) + ').';
+      else if (!h.ok) info = 'Isi nama dan nominal tiap teman.';
+      else if (h.own === 0) info = 'Seluruh nominal adalah titipan. Transaksi asli diganti piutang dan tidak masuk pengeluaranmu.';
+      else info = 'Pengeluaranmu tercatat ' + fmtRp(h.own) + ' (' + s.category + '). Bagian teman dicatat sebagai piutang dari akun ' + s.account + '.';
+      const elInfo = document.getElementById('titip-info');
+      if (elInfo) { elInfo.textContent = info; elInfo.style.color = (h.own < 0) ? 'var(--coral)' : 'var(--text-muted)'; }
+
+      const btn = document.getElementById('titip-save');
+      if (btn) { btn.disabled = !h.ok; btn.style.opacity = h.ok ? '1' : '0.45'; }
+    }
+
+    function renderTitip() {
+      const s = window._titip;
+      const akun = titipAkunList();
+      const nama = [...new Set((state.hutang || []).filter(h => h.type === 'Piutang').map(h => h.name))];
+      const meta = catMeta(s.category);
+
+      const switchHtml = (on, handler) => `<label style="position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0;cursor:pointer"><input type="checkbox" onchange="${handler}" ${on ? 'checked' : ''} style="opacity:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0;cursor:pointer"><span style="position:absolute;inset:0;background:${on ? 'var(--violet)' : 'var(--border)'};border-radius:28px;transition:0.15s;pointer-events:none"><span style="position:absolute;height:22px;width:22px;left:${on ? '25px' : '3px'};bottom:3px;background:white;border-radius:50%;transition:0.15s;box-shadow:0 2px 4px rgba(0,0,0,0.1)"></span></span></label>`;
+
+      const rows = s.friends.map((f, i) => {
+        const chips = f.paid
+          ? `<label class="field-label" style="margin-top:14px">Dibayar balik ke akun</label>
+             <div style="display:flex;gap:10px;flex-wrap:wrap">${akun.map((a, j) => `<button class="chip ${f.payAccount === a.name ? 'active' : ''}" onclick="titipSetPay(${i},${j})">${escapeHtml(a.name)}</button>`).join('')}</div>`
+          : '';
+        return `<div class="card" style="padding:16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            ${iconBubble('user', '#1A73E8', 36)}
+            <div style="flex:1;font-size:15px;font-weight:700;color:var(--text)">Teman ${i + 1}</div>
+            ${s.friends.length > 1 ? `<button onclick="titipHapus(${i})" aria-label="Hapus teman" style="background:var(--surface-raised);border:none;border-radius:12px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="x" style="width:16px;height:16px;color:var(--text-muted)"></i></button>` : ''}
+          </div>
+          <label class="field-label" for="titip-name-${i}" style="margin-top:0">Nama</label>
+          <input id="titip-name-${i}" list="titip-names" class="field-input" placeholder="Nama teman" value="${escapeHtml(f.name)}" oninput="window._titip.friends[${i}].name=this.value;titipUpdate()">
+          <label class="field-label" for="titip-amt-${i}">Bagian teman (Rp)</label>
+          <input id="titip-amt-${i}" class="field-input" inputmode="numeric" placeholder="0" value="${f.amountRaw}" oninput="formatNumberInput(this);window._titip.friends[${i}].amountRaw=this.value;titipUpdate()">
+          <div style="display:flex;align-items:center;gap:12px;margin-top:16px">
+            <div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text)">Sudah dibayar balik</div><div style="font-size:12.5px;color:var(--text-muted);font-weight:500">Misal diganti tunai. Piutang langsung lunas.</div></div>
+            ${switchHtml(f.paid, `titipTogglePaid(${i},this.checked)`)}
+          </div>
+          ${chips}
+        </div>`;
+      }).join('');
+
+      return `
+        <datalist id="titip-names">${nama.map(n => `<option value="${escapeHtml(n)}"></option>`).join('')}</datalist>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <button onclick="titipKembali()" aria-label="Kembali" style="background:var(--surface-raised);border:none;border-radius:14px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i data-lucide="chevron-left" style="width:20px;height:20px;color:var(--text-muted)"></i></button>
+          <div style="font-size:14px;color:var(--text-muted);font-weight:500;line-height:1.4">Pisahkan bagian teman dari pengeluaran ini.</div>
+        </div>
+
+        <div class="card" style="padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+          ${iconBubble(meta.icon, meta.color, 46)}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:700;color:var(--text);word-break:break-word">${escapeHtml(s.desc)}</div>
+            <div style="font-size:13px;color:var(--text-muted);font-weight:500;margin-top:2px">${escapeHtml(s.category)} · ${escapeHtml(s.account)} · ${fmtDateLabel(s.date)}</div>
+          </div>
+          <div class="tabular" style="font-size:15px;font-weight:800;color:var(--text);flex-shrink:0">${fmtRp(s.total)}</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:16px">
+          <button onclick="titipBagi(true)" style="flex:1;background:var(--violet-soft);border:none;border-radius:14px;padding:12px 6px;color:var(--violet);font-size:13.5px;font-weight:700;cursor:pointer">Bagi rata (aku ikut)</button>
+          <button onclick="titipBagi(false)" style="flex:1;background:var(--surface-raised);border:none;border-radius:14px;padding:12px 6px;color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer">Semua titipan</button>
+        </div>
+
+        ${rows}
+
+        <button onclick="titipTambah()" style="width:100%;background:none;border:1.5px dashed var(--violet);border-radius:14px;padding:12px 0;color:var(--violet);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px"><i data-lucide="plus" style="width:14px;height:14px;vertical-align:-2px"></i> Tambah teman</button>
+
+        <div class="card" style="padding:16px 18px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Total transaksi</span><span class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtRp(s.total)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:14px;color:var(--text-muted);font-weight:600">Bagian teman</span><span id="titip-sum" class="tabular" style="font-size:14px;font-weight:800;color:var(--text)">${fmtRp(0)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px dashed var(--border)"><span style="font-size:14px;color:var(--text);font-weight:700">Bagianku</span><span id="titip-own" class="tabular" style="font-size:15px;font-weight:800;color:var(--emerald)">${fmtRp(s.total)}</span></div>
+          <div id="titip-info" style="font-size:13px;font-weight:600;line-height:1.45;margin-top:12px"></div>
+        </div>
+
+        <button id="titip-save" class="btn-primary" onclick="submitTitip()"><i data-lucide="check" style="width:18px;height:18px"></i> Simpan</button>
+      `;
+    }
+
+    // Optimistic UI: ubah state lokal -> kembali ke halaman asal -> panggil server -> sinkron ulang
+    function submitTitip() {
+      const s = window._titip;
+      if (!s) return;
+      const h = titipHitung();
+      if (!h.ok) return;
+      const friends = s.friends.map(f => ({
+        name: String(f.name).trim(), amount: titipNum(f.amountRaw), paid: !!f.paid, payAccount: f.paid ? f.payAccount : ''
+      }));
+
+      const idx = state.transactions.findIndex(x => x.id === s.id);
+      if (idx < 0) return;
+      const today = getLocalDateString(new Date());
+      const stamp = Date.now();
+      if (h.own > 0) state.transactions[idx].amount = h.own;
+      else state.transactions.splice(idx, 1);
+      friends.forEach((f, k) => {
+        state.transactions.unshift({ id: 'temp-titip-' + stamp + '-' + k, date: s.date, desc: 'Pinjamkan ke ' + f.name, category: 'Hutang Piutang', type: 'Keluar', amount: f.amount, account: s.account });
+        if (f.paid) state.transactions.unshift({ id: 'temp-titip-p-' + stamp + '-' + k, date: today, desc: 'Terima piutang: ' + f.name, category: 'Hutang Piutang', type: 'Masuk', amount: f.amount, account: f.payAccount });
+        state.hutang.push({ id: 'temp-titip-h-' + stamp + '-' + k, name: f.name, type: 'Piutang', total: f.amount, paid: f.paid ? f.amount : 0, date: s.date, dueDate: '', note: 'Titip: ' + s.desc, status: f.paid ? 'Lunas' : 'Aktif', linkAccount: s.account });
+      });
+
+      const id = s.id;
+      state.tab = s.back === 'titip' ? 'home' : s.back;
+      window._titip = null;
+      render();
+      window.scrollTo(0, 0);
+      showToast('Titipan dicatat!');
+      google.script.run
+        .withSuccessHandler(r => { if (!r || !r.success) showToast((r && r.error) || 'Gagal menyimpan titipan'); loadData(); })
+        .withFailureHandler(() => { showToast('Gagal menyimpan titipan'); loadData(); })
+        .splitBillTransaksi(id, friends);
+    }
+</script>
