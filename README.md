@@ -67,6 +67,16 @@ Buat Automation tipe *Notification* per aplikasi, lalu aksi *Get Contents of URL
 
 Secara bawaan semua akun memakai ikon Lucide. Untuk memakai logo bank/e-wallet milikmu, isi `JS_LogoSaya.html` (petunjuk ada di dalam file). Logo merek dagang tidak disertakan di repo ini.
 
+## Pemecahan masalah
+
+| Gejala | Penyebab dan solusi |
+|---|---|
+| Halaman Google "Sorry, unable to open the file at present" | Browser sedang login dengan **beberapa akun Google**. Buka di jendela incognito, pakai profil browser dengan satu akun saja, atau logout dari akun lain. Pastikan juga deployment bertipe *Web app*, *Execute as: Me*, *Who has access: Anyone*. |
+| Layar merah "Koneksi Server Lambat / Gagal" | Pastikan script dibuka dari **Google Sheet → Extensions → Apps Script** (container-bound), bukan project mandiri di script.google.com. Jalankan **KAYA → Setup Awal**, lalu cek menu **Executions** di editor Apps Script untuk melihat pesan error `getData`. |
+| Perubahan kode tidak muncul | Deploy ulang lewat **Manage deployments → Edit → New version**. Jangan buat "New deployment", karena URL `/exec` akan berubah dan `GAS_URL` di Worker harus diganti. |
+| Tampilan terlalu besar | Buka lewat URL `workers.dev` (bukan `/exec` langsung). Skalanya diatur oleh `UI_SCALE` di `worker.js`. |
+| Fitur OCR atau sinkron E-Money gagal | Aktifkan layanan lanjutan **Drive API (v2)** di Apps Script (Services), lalu jalankan satu fungsi dari editor dan setujui izinnya. |
+
 ## Struktur repo
 
 | File | Fungsi |
