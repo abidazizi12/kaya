@@ -39,22 +39,28 @@ Worker menampilkan aplikasi di dalam iframe, menyediakan manifest PWA dan ikon, 
 
 ### Opsional: pencatatan otomatis dari notifikasi (iPhone Shortcuts)
 
-Buat Automation tipe *Notification* per aplikasi, lalu aksi *Get Contents of URL*:
+Buat Automation di aplikasi Shortcuts: **Notification** → pilih aplikasinya (mis. GoPay) → aksi **Get Contents of URL**.
 
-- URL: URL `/exec` Apps Script-mu (bukan URL workers.dev)
-- Method: `POST`, Request Body: **JSON**
+<p align="center">
+  <img src="docs/shortcut-gopay.png" alt="Contoh Shortcut notifikasi GoPay ke KAYA" width="320">
+</p>
 
-```json
-{
-  "token": "<token dari menu KAYA → Lihat Token Webhook>",
-  "app": "Gopay",
-  "account": "E-Wallet",
-  "title": "<Notification Title>",
-  "text": "<Notification Body>"
-}
-```
+Pengaturannya:
 
-`account` harus sama dengan nama akun di sheet **Akun**. Notifikasi yang tidak dikenali masuk ke sheet **Log Notifikasi** dan muncul di antrean **Perlu Diperiksa**. Tambahkan kata kunci merchant di sheet **Kata Kunci** supaya kategori terisi otomatis (baris paling atas yang cocok dipakai).
+- **URL**: URL `/exec` Apps Script-mu (bukan URL `workers.dev`)
+- **Method**: `POST`
+- **Request Body**: `JSON`, dengan empat field berikut
+
+| Field | Isi |
+|---|---|
+| `token` | Token webhook dari menu **KAYA → Lihat Token Webhook** di Google Sheet |
+| `account` | Nama akun persis seperti di sheet **Akun** (mis. `Gopay`) |
+| `title` | Variabel **Title** dari notifikasi |
+| `text` | Variabel **Notification** dari notifikasi |
+
+Untuk BRImo, buat Automation terpisah dengan aplikasi BRImo, tambahkan field `app` berisi `BRImo`, dan isi `account` dengan `BRI`. Untuk GoPay, `app` boleh dihilangkan.
+
+Notifikasi yang tidak dikenali masuk ke sheet **Log Notifikasi** dan muncul di antrean **Perlu Diperiksa**. Tambahkan kata kunci merchant di sheet **Kata Kunci** supaya kategori terisi otomatis (baris paling atas yang cocok dipakai). Matikan opsi *Ask Before Running* agar otomasi berjalan tanpa konfirmasi.
 
 ## Keamanan — baca ini
 
