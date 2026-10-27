@@ -4,6 +4,8 @@ Pencatat keuangan pribadi berbasis **Google Sheets + Google Apps Script**. Datam
 
 > Versi: **v1.0.0 (Public Release)** · by Abidzi
 
+[![Dukung KAYA via QRIS](https://img.shields.io/badge/Dukung%20KAYA-via%20QRIS-E8546B?style=for-the-badge)](#dukung-kaya)
+
 ## Fitur
 
 - Catat pemasukan dan pengeluaran, transfer antar rekening, kategori dan budget bulanan
@@ -86,6 +88,14 @@ Secara bawaan semua akun memakai ikon Lucide. Untuk memakai logo bank/e-wallet m
 ## Disclaimer
 
 KAYA adalah alat pencatat, bukan nasihat keuangan. Gunakan dengan risiko sendiri (lihat `LICENSE`). Cadangkan Google Sheet-mu secara berkala (File → Make a copy).
+
+## Dukung KAYA
+
+KAYA gratis dan terbuka untuk semua. Kalau aplikasi ini membantu, kamu bisa mentraktir pembuatnya lewat QRIS (nominal bebas, sepenuhnya sukarela). Scan dengan GoPay, BCA, Mandiri, BNI, BRI, atau aplikasi bank/e-wallet lain yang mendukung QRIS. Di dalam aplikasi, tombolnya ada di **Pengaturan → Dukung KAYA**.
+
+<p align="center">
+  <img src="docs/qris-kaya.png" alt="QRIS dukungan KAYA" width="320">
+</p>
 
 ## Lisensi
 
