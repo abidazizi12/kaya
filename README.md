@@ -37,7 +37,7 @@ Setelah mengubah kode Apps Script, deploy ulang lewat **Manage deployments → E
 
 Worker menampilkan aplikasi di dalam iframe, menyediakan manifest PWA dan ikon, serta menerapkan skala tampilan. Tidak ada logika bisnis atau rahasia di Worker. Kalau tampilan terasa terlalu besar atau kecil, ubah `UI_SCALE` (bawaan `0.85`).
 
-### Opsional: pencatatan otomatis dari notifikasi (iPhone Shortcuts)
+### Opsional: pencatatan otomatis dari notifikasi (iPhone Shortcuts IOS 27)
 
 Buat Automation di aplikasi Shortcuts: **Notification** → pilih aplikasinya (mis. GoPay) → aksi **Get Contents of URL**.
 
